@@ -40,7 +40,9 @@ Every change moves through the same five phases, in order:
 4. **Spec validation** — verify the implementation matches the delta specs and tasks.
 5. **Archival** — merge the change's delta specs into the project's living specs.
 
-Each phase produces concrete artifacts in the change directory and (where applicable) hands off to a Superpowers skill. The full artifact-by-artifact mapping is below.
+Each phase produces concrete artifacts in the change directory and (where applicable) hands off to a Superpowers skill.
+
+![Superspec change: 5 Phases](docs/assets/superspec-five-phases.svg)
 
 ---
 

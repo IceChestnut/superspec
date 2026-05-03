@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="620" viewBox="0 0 1280 620" role="img" aria-labelledby="title desc">
+  <title id="title">The five phases of a Superspec change</title>
+  <desc id="desc">A clean left-to-right workflow diagram with five equal phases: Brainstorm, Artifact Creation, Code Implementation, Spec Validation, and Archival. Archival points down to the living specs output.</desc>
+
+  <defs>
+    <filter id="shadow" x="-12%" y="-16%" width="124%" height="136%">
+      <feDropShadow dx="0" dy="10" stdDeviation="13" flood-color="#061b35" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M 1 1 L 11 6 L 1 11 Z" fill="#183b67"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { fill: #061b35; font: 700 40px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .subtitle { fill: #60758d; font: 400 17px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .card { fill: #ffffff; }
+      .header { fill: #071f3d; }
+      .phase-number { fill: #d6b353; font: 800 15px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .phase-title { fill: #ffffff; font: 700 20px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .artifact { fill: #ffffff; stroke: #d7dee8; stroke-width: 1.4; }
+      .artifact-text { fill: #21324a; font: 500 14px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .connector { fill: none; stroke: #183b67; stroke-width: 3.5; marker-end: url(#arrow); stroke-linecap: round; }
+      .output-card { fill: #ffffff; stroke: #d7dee8; stroke-width: 1.5; }
+      .output-title { fill: #061b35; font: 700 17px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .output-text { fill: #60758d; font: 500 13px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .legend-text { fill: #40546d; font: 600 12px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .note { fill: #60758d; font: 500 13px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1280" height="620"/>
+
+  <g transform="translate(70 52)">
+    <text class="title" x="0" y="0">The five phases of a Superspec change</text>
+    <text class="subtitle" x="1" y="34">A single change moves from an idea to implementation, verification, and finally into the project's living specs.</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <g transform="translate(70 150)">
+      <rect class="card" x="0" y="0" width="170" height="270" rx="8"/>
+      <rect class="header" x="0" y="0" width="170" height="88" rx="8"/>
+      <path d="M0 80 H170 V88 H0 Z" fill="#071f3d"/>
+      <text class="phase-number" x="18" y="28">01</text>
+      <text class="phase-title" x="18" y="60">Brainstorm</text>
+      <circle cx="144" cy="28" r="12" fill="#ffffff" opacity="0.96"/>
+      <path d="M145 18 L137 29 H143 L141 38 L151 25 H145 Z" fill="#b08a2e"/>
+      <rect class="artifact" x="18" y="116" width="134" height="36" rx="7"/>
+      <text class="artifact-text" x="85" y="139" text-anchor="middle">Idea clarified</text>
+      <rect class="artifact" x="18" y="166" width="134" height="36" rx="7"/>
+      <text class="artifact-text" x="85" y="189" text-anchor="middle">Guided chat</text>
+    </g>
+
+    <g transform="translate(315 150)">
+      <rect class="card" x="0" y="0" width="170" height="270" rx="8"/>
+      <rect class="header" x="0" y="0" width="170" height="88" rx="8"/>
+      <path d="M0 80 H170 V88 H0 Z" fill="#071f3d"/>
+      <text class="phase-number" x="18" y="28">02</text>
+      <text class="phase-title" x="18" y="55">Artifact</text>
+      <text class="phase-title" x="18" y="79">Creation</text>
+      <circle cx="144" cy="28" r="12" fill="#ffffff" opacity="0.96"/>
+      <path d="M138 20 H146 L151 25 V36 H138 Z" fill="#ffffff" stroke="#183b67" stroke-width="1.4"/>
+      <path d="M146 20 V25 H151" fill="none" stroke="#183b67" stroke-width="1.2"/>
+      <rect class="artifact" x="18" y="110" width="134" height="31" rx="7"/>
+      <text class="artifact-text" x="85" y="130" text-anchor="middle">Proposal</text>
+      <rect class="artifact" x="18" y="150" width="134" height="31" rx="7"/>
+      <text class="artifact-text" x="85" y="170" text-anchor="middle">Design</text>
+      <rect class="artifact" x="18" y="190" width="134" height="31" rx="7"/>
+      <text class="artifact-text" x="85" y="210" text-anchor="middle">Delta specs</text>
+      <rect class="artifact" x="18" y="230" width="134" height="31" rx="7"/>
+      <text class="artifact-text" x="85" y="250" text-anchor="middle">Tasks + plan</text>
+    </g>
+
+    <g transform="translate(560 150)">
+      <rect class="card" x="0" y="0" width="170" height="270" rx="8"/>
+      <rect class="header" x="0" y="0" width="170" height="88" rx="8"/>
+      <path d="M0 80 H170 V88 H0 Z" fill="#071f3d"/>
+      <text class="phase-number" x="18" y="28">03</text>
+      <text class="phase-title" x="18" y="55">Code</text>
+      <text class="phase-title" x="18" y="79">Implementation</text>
+      <circle cx="144" cy="28" r="12" fill="#ffffff" opacity="0.96"/>
+      <path d="M145 18 L137 29 H143 L141 38 L151 25 H145 Z" fill="#b08a2e"/>
+      <rect class="artifact" x="18" y="116" width="134" height="36" rx="7"/>
+      <text class="artifact-text" x="85" y="139" text-anchor="middle">Worktree</text>
+      <rect class="artifact" x="18" y="166" width="134" height="36" rx="7"/>
+      <text class="artifact-text" x="85" y="189" text-anchor="middle">Subagent TDD</text>
+    </g>
+
+    <g transform="translate(805 150)">
+      <rect class="card" x="0" y="0" width="170" height="270" rx="8"/>
+      <rect class="header" x="0" y="0" width="170" height="88" rx="8"/>
+      <path d="M0 80 H170 V88 H0 Z" fill="#071f3d"/>
+      <text class="phase-number" x="18" y="28">04</text>
+      <text class="phase-title" x="18" y="55">Spec</text>
+      <text class="phase-title" x="18" y="79">Validation</text>
+      <circle cx="144" cy="28" r="12" fill="#ffffff" opacity="0.96"/>
+      <path d="M138 20 H146 L151 25 V36 H138 Z" fill="#ffffff" stroke="#183b67" stroke-width="1.4"/>
+      <path d="M146 20 V25 H151" fill="none" stroke="#183b67" stroke-width="1.2"/>
+      <rect class="artifact" x="18" y="116" width="134" height="36" rx="7"/>
+      <text class="artifact-text" x="85" y="139" text-anchor="middle">Verify deltas</text>
+      <rect class="artifact" x="18" y="166" width="134" height="36" rx="7"/>
+      <text class="artifact-text" x="85" y="189" text-anchor="middle">Check tasks</text>
+    </g>
+
+    <g transform="translate(1050 150)">
+      <rect class="card" x="0" y="0" width="170" height="270" rx="8"/>
+      <rect class="header" x="0" y="0" width="170" height="88" rx="8"/>
+      <path d="M0 80 H170 V88 H0 Z" fill="#071f3d"/>
+      <text class="phase-number" x="18" y="28">05</text>
+      <text class="phase-title" x="18" y="60">Archival</text>
+      <circle cx="144" cy="28" r="12" fill="#ffffff" opacity="0.96"/>
+      <path d="M138 20 H146 L151 25 V36 H138 Z" fill="#ffffff" stroke="#183b67" stroke-width="1.4"/>
+      <path d="M146 20 V25 H151" fill="none" stroke="#183b67" stroke-width="1.2"/>
+      <rect class="artifact" x="18" y="116" width="134" height="36" rx="7"/>
+      <text class="artifact-text" x="85" y="139" text-anchor="middle">Merge deltas</text>
+      <rect class="artifact" x="18" y="166" width="134" height="36" rx="7"/>
+      <text class="artifact-text" x="85" y="189" text-anchor="middle">Archive change</text>
+    </g>
+  </g>
+
+  <path class="connector" d="M 256 285 H 292"/>
+  <path class="connector" d="M 501 285 H 537"/>
+  <path class="connector" d="M 746 285 H 782"/>
+  <path class="connector" d="M 991 285 H 1027"/>
+
+  <path class="connector" d="M 1135 433 V 465"/>
+  <g transform="translate(1033 482)">
+    <rect class="output-card" x="0" y="0" width="204" height="66" rx="8"/>
+    <path d="M28 16 H58 L72 30 V52 H28 Z" fill="#ffffff" stroke="#183b67" stroke-width="1.5"/>
+    <path d="M58 16 V30 H72" fill="none" stroke="#183b67" stroke-width="1.3"/>
+    <path d="M39 38 H61 M39 46 H56" stroke="#8da0b8" stroke-width="2" stroke-linecap="round"/>
+    <text class="output-title" x="94" y="31">Living specs</text>
+    <text class="output-text" x="94" y="50">Updated baseline</text>
+  </g>
+
+  <g transform="translate(70 496)">
+    <circle cx="10" cy="10" r="10" fill="#ffffff" stroke="#d7dee8"/>
+    <path d="M11 3 L4 12 H9 L7.4 18 L16 7.6 H11 Z" fill="#b08a2e"/>
+    <text class="legend-text" x="28" y="14">Superpowers handoff</text>
+    <circle cx="178" cy="10" r="10" fill="#ffffff" stroke="#d7dee8"/>
+    <path d="M173 4 H181 L186 9 V18 H173 Z" fill="#ffffff" stroke="#183b67" stroke-width="1.2"/>
+    <path d="M181 4 V9 H186" fill="none" stroke="#183b67" stroke-width="1"/>
+    <text class="legend-text" x="196" y="14">OpenSpec artifact</text>
+    <text class="note" x="0" y="44">Artifacts stay traceable in the change directory until archival folds them into the living specs.</text>
+  </g>
+</svg>
