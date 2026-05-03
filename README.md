@@ -115,26 +115,32 @@ These commands are run **inside your agent harness** (e.g., Cursor's agent mode,
 
 Once installed, you have two flows.
 
-### Quick flow (recommended)
+### Step-by-step flow (recommended)
+
+Stop at each artifact, review it, give feedback, and only continue when you're satisfied. This is the default flow for any non-trivial change — human-in-the-loop at every checkpoint.
 
 ```bash
-/opsx:ff my-feature    # End-to-end: brainstorm + proposal + design + specs + tasks + plan
-/opsx:apply            # worktree + subagent-driven-development
-/opsx:archive          # archive
-```
-
-### Step-by-step flow
-
-```bash
-/opsx:new my-feature --schema superspec
+/opsx:new my-feature   # Schema flag not needed — superspec is the configured default
 /opsx:continue         # → brainstorm (interactive conversation)
 /opsx:continue         # → proposal
 /opsx:continue         # → design (optional, only when technical decisions need explanation)
-/opsx:continue         # → specs
+/opsx:continue         # → specs (creates delta specs: ADDED / MODIFIED / REMOVED / RENAMED)
 /opsx:continue         # → tasks
 /opsx:continue         # → plan
-/opsx:apply
-/opsx:archive
+/opsx:apply            # Worktree + Superpowers TDD loop — produces the actual code
+/opsx:verify           # Validate implementation matches the delta specs and tasks
+/opsx:archive          # Sync the change's delta specs into project specs, then archive
+```
+
+### Quick flow (fast-forward)
+
+For small, well-understood changes where you trust the agent to produce every artifact without per-step review. `/opsx:ff` runs the full artifact-creation pipeline end-to-end with no checkpoints.
+
+```bash
+/opsx:ff my-feature    # End-to-end: brainstorm + proposal + design + specs + tasks + plan
+/opsx:apply            # Worktree + Superpowers TDD loop — produces the actual code
+/opsx:verify           # Validate implementation matches the delta specs and tasks
+/opsx:archive          # Sync the change's delta specs into project specs, then archive
 ```
 
 The `/opsx:` slash commands ship with your harness's OpenSpec integration, not with this schema. If your harness uses different command names, check its OpenSpec docs.
