@@ -1,8 +1,14 @@
-# Superspec
+<p align="center">
+  <img src="docs/assets/superspec-logo.png" alt="SuperSpec — Spec-driven development with superpowers" width="640">
+</p>
 
-Spec-driven workflow that connects [OpenSpec](https://github.com/Fission-AI/OpenSpec) governance with [Superpowers](https://github.com/obra/superpowers) execution discipline so a single change is fully traceable from idea → spec → TDD-verified code.
+<p align="center">
+  Spec-driven workflow that connects <a href="https://github.com/Fission-AI/OpenSpec">OpenSpec</a> governance with <a href="https://github.com/obra/superpowers">Superpowers</a> execution discipline so a single change is fully traceable from idea → spec → TDD-verified code.
+</p>
 
-MIT licensed · Schema version 1 · Requires OpenSpec + Superpowers
+<p align="center">
+  MIT licensed · Schema version 1 · Requires OpenSpec + Superpowers
+</p>
 
 ---
 
