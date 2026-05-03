@@ -14,17 +14,15 @@
 
 ## Why Superspec
 
-OpenSpec and Superpowers are each excellent on their own — OpenSpec manages the *what* (proposal → specs → design → tasks), Superpowers manages the *how* (brainstorming, writing-plans, subagent-driven-development, TDD, code review). But three structural problems emerge when you alternate between them in real development:
+**[OpenSpec](https://github.com/Fission-AI/OpenSpec)** turns feature ideas into versioned, reviewable specs — proposals, capability deltas, and tasks that live in the repo alongside the code.
 
-1. **Duplicate outputs.** Brainstorming produces design documents in the Superpowers directory (`docs/superpowers/specs/`); OpenSpec writes proposal/design again in the change directory. The content overlaps heavily.
-2. **Task fragmentation.** OpenSpec's `tasks.md` (coarse-grained checkboxes) and Superpowers' `plan.md` (micro TDD steps) describe the same work, but their format, location, and status tracking are independent.
-3. **Manual orchestration.** You have to decide on your own which skill to invoke at each step; nothing hands off automatically between the two systems.
+**[Superpowers](https://github.com/obra/superpowers)** is a set of execution skills for coding agents — brainstorming, plan-writing, TDD, subagent dispatch, and code review — that enforce discipline during implementation.
 
-Superspec is a **custom OpenSpec schema** that wires the two together at the artifact-instruction layer — without modifying any Superpowers skill files or the OpenSpec CLI.
+The two overlap (both produce design and task artifacts) but focus on different domains: OpenSpec governs **spec-driven planning**, Superpowers governs **spec-driven development and implementation**. Used independently, you end up with duplicate documents, parallel task lists, and manual decisions about which skill to invoke at each step.
 
-> The core value isn't "chaining skills together." It's connecting **requirements alignment** (OpenSpec) with **rigorous execution** (Superpowers) so the entire path from "what we want to do" to "code that has passed TDD + code review" is traceable, reproducible, and auditable for a single change.
->
-> OpenSpec rescues requirements from conversations. Superpowers rescues discipline from human willpower. Only when combined do they form complete spec-driven development.
+**Superspec is an opinionated integration of both**, with OpenSpec as the orchestrator. The artifact pipeline drives the workflow; each phase invokes the right Superpowers skill at the right time so the path from idea to TDD-verified code is traceable, reproducible, and auditable.
+
+OpenSpec supports custom schemas, and Superspec is exactly that — a drop-in schema that picks the best of both frameworks and wires them together for a fully integrated workflow combining spec-driven and test-driven development. No fork of OpenSpec, no modification to Superpowers skills.
 
 ---
 
