@@ -42,8 +42,6 @@ Every change moves through the same five phases, in order:
 
 Each phase produces concrete artifacts in the change directory and (where applicable) hands off to a Superpowers skill.
 
-![Superspec change: 5 Phases](docs/assets/superspec-five-phases.svg)
-
 ---
 
 ## Installation
@@ -56,11 +54,7 @@ Each phase produces concrete artifacts in the change directory and (where applic
 
 ### 1. Install Superpowers
 
-Install for your agent harness — globally, or scoped to the current repository. Follow the instructions in the Superpowers README:
-
-```bash
-open https://github.com/obra/superpowers
-```
+Install for your agent harness — globally, or scoped to the current repository. Follow the instructions in the Superpowers README: [Superpowers Install Steps](https://github.com/obra/superpowers#installation)
 
 ### 2. Install OpenSpec
 
@@ -86,7 +80,6 @@ git clone --depth 1 --filter=blob:none --sparse \
   cd /tmp/superspec-tmp && \
   git sparse-checkout set openspec/schemas/superspec && \
   cd - && \
-  mkdir -p openspec/schemas && \
   mkdir -p openspec/schemas/superspec && \
   cp -r /tmp/superspec-tmp/openspec/schemas/superspec/. openspec/schemas/superspec/ && \
   rm -rf /tmp/superspec-tmp
@@ -112,6 +105,15 @@ openspec validate     # should pass with no errors
 ## Quick start
 
 These commands are run **inside your agent harness** (e.g., Cursor's agent mode, Claude Code, Copilot, Codex, or Gemini) — not in a plain shell. The `/opsx:` slash commands are registered by your harness's OpenSpec integration, so type them directly into the agent prompt.
+
+OpenSpec installs both slash commands as well as agent skills for your harness. Agent harness often auto-complete
+slash commands and skills. Use the slash commands (starting with `/opsx:...`) instead of the skills.
+
+Example: Archiving a change.
+```
+/opsx-archive             ==> slash commands (use this)
+/openspec-archive-change  ==> skill name (do not use this - slash command will use this implicitly)
+```
 
 Once installed, you have two flows.
 
