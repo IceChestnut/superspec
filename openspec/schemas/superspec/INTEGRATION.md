@@ -2,7 +2,7 @@
 
 > This document explains how the `sdd-plus-superpowers` schema integrates OpenSpec's artifact governance workflow with Superpowers' execution skills into a single workflow. It serves as a reference table for new member onboarding, change reviews, and as required reading before modifying the schema.
 >
-> Corresponding schema version: `sdd-plus-superpowers` v3
+> Corresponding schema version: `sdd-plus-superpowers` v4
 
 ---
 
@@ -25,7 +25,7 @@ The two are integrated through a custom schema [schema.yaml](./schema.yaml). The
 | 4 | `superpowers:subagent-driven-development` | apply step 2a | Direct |
 | 5 | `superpowers:test-driven-development` | (auto-triggered inside #4) | **Transitive** (SKILL.md L205 / L274) |
 | 6 | `superpowers:requesting-code-review` | (auto-triggered inside #4) | **Transitive** (SKILL.md L270) |
-| 7 | `superpowers:finishing-a-development-branch` | `finalize` artifact instruction | Direct |
+| 7 | `superpowers:finishing-a-development-branch` | Manual escape hatch only — Pattern A is executed by the schema directly (v4) | **Fallback** |
 
 There is also one **fallback**:
 
@@ -219,31 +219,31 @@ If any check fails, go back to the corresponding artifact, fix it, and re-run ve
 
 ### Step 4: Finalization
 
-`/opsx:continue` after verify completes surfaces the `finalize` artifact's instruction.
+`/opsx:continue` after verify completes surfaces the `finalize` artifact's instruction. As of schema v4, the instruction executes **Pattern A** directly — it does NOT invoke `superpowers:finishing-a-development-branch` in the canonical flow.
 
-#### 4-1. Finalize — Invoke `superpowers:finishing-a-development-branch`
+#### 4-1. Pattern A canonical sequence (executed by the schema)
 
-- Confirm all tests are green
-- Present options: merge / PR / keep branch / discard
-- Clean up the worktree (preserved if Option 2 PR or Option 3 keep-as-is)
-- Write `finalize.md` per `openspec/schemas/superspec/templates/finalize.md`: outcome chosen, PR URL if applicable, final branch state, worktree cleanup status, test-baseline confirmation, timestamp.
+1. Detect worktree path and worktree branch name; detect the feature branch.
+2. Verify tests pass in the worktree.
+3. Switch to the feature branch in the main checkout, pull.
+4. `git merge --ff-only <worktree-branch>` into the feature branch.
+5. Re-verify tests on the merged result.
+6. Worktree cleanup with provenance guard (only for paths under `.worktrees/`, `worktrees/`, or `~/.config/superpowers/worktrees/`).
+7. Delete the local worktree branch.
+8. Write `finalize.md` on the feature branch with Outcome: `pr-updated`.
+9. Commit the receipt on the feature branch.
+10. `git push origin <feature-branch>` — the existing PR (opened manually between plan and apply for spec pre-review) auto-updates.
+11. Post (or edit in place) a single code-reviewer onboarding comment on the PR, summarizing the change for a reviewer who did not see the spec pre-review.
 
-#### 4-2. Retrospective (Recommended, Non-blocking)
+The comment uses a marker (`<!-- superspec:finalize-comment -->`) for idempotent upsert; re-running finalize edits the existing comment rather than duplicating it. The body is **summarized in the agent's own words** from the change artifacts; verbatim paste is forbidden.
 
-**Not a mandatory step, but strongly recommended**: Before archiving, produce a `retrospective.md` in the change directory. The retrospective is a "self-review" of the entire change — it captures things the diff cannot show: why a decision was made, what surprised you, and which lessons learned are worth promoting to long-term memory.
+#### 4-2. Escape hatch (manual skill invocation)
 
-**Why it's worth doing**: Every retrospective improves the quality of the next change. Without retros, blind spots accumulate repeatedly; with retros, both the team and the AI learn from each execution.
+If your workflow doesn't match Pattern A — solo / no-PR, brand-new PR from the skill, keep-as-is, or discard — invoke `superpowers:finishing-a-development-branch` directly via the Skill tool, pick the matching option, hand-write `finalize.md` from `templates/finalize.md`, and then run the comment-posting subroutine (defined in the finalize instruction). The subroutine self-skips when there's no PR and posts/edits the orientation comment when one exists.
 
-Recommended 6 sections (evidence-first — each claim cites a commit / file / quantifiable fact):
+#### 4-3. Retrospective (recommended, non-blocking)
 
-1. **Wins** — What went well (with commit / test evidence)
-2. **Misses** — What didn't go well (🔴 blocking / 🟡 painful / 📌 nit)
-3. **Plan deviations** — Which tasks changed in scope, and why
-4. **Skill / workflow compliance** — Which skills were actually used, which were deliberately skipped (with reasons)
-5. **Surprises** — Which original assumptions turned out to be wrong
-6. **Promote candidates** — Lessons worth promoting to long-term memory / CLAUDE.md / schema or skill updates (categorize each, so insights don't quietly die in the archive)
-
-If `workflow-retrospective` skill is available in the environment, it automates evidence collection; otherwise write manually. For trivial single-commit fixes where the overhead exceeds the value, this can be skipped.
+Same as v3 — write a short `retrospective.md` in the change directory before `finalize.md` if the change is non-trivial. Six suggested sections: Wins, Misses, Plan deviations, Skill/workflow compliance, Surprises, Promote candidates.
 
 ---
 
@@ -264,23 +264,26 @@ Behavior:
 
 `/opsx:archive` does NOT merge git branches and does NOT create PRs. The git-side closeout is the `finalize` artifact's responsibility (Step 4-1 above).
 
-#### Canonical PR-review golden path
+#### Canonical PR-review golden path (v4)
 
 ```text
-1. verify completes (verify.md committed on feature branch)
-2. finalize (creates PR via finishing-a-development-branch; finalize.md records Outcome: pr-created, Final state: pr-open; worktree preserved)
-3. [PAUSE: human review on the PR; reviewer approves]
-4. /opsx:archive on the feature branch (syncs delta specs, moves change dir; new commits land on the branch)
+1. verify completes (verify.md committed on feature branch in the worktree)
+2. finalize (Pattern A — schema merges worktree → feature branch, pushes
+   to update the existing PR, posts code-reviewer onboarding comment;
+   finalize.md records Outcome: pr-updated, Final state: pr-updated;
+   worktree is removed during finalize)
+3. [PAUSE: human code review on the PR; reviewer approves]
+4. /opsx:archive on the feature branch (syncs delta specs, moves change
+   dir; new commits land on the feature branch)
 5. Push the archive commits to update the PR
 6. PR merge (gh pr merge --squash --delete-branch or GitHub UI)
-7. Local worktree cleanup if still present (git worktree remove + git worktree prune)
 ```
 
-The archive-before-merge ordering keeps the PR's diff complete: every commit that went into the change is in the PR, including the archive sync. If the PR is merged before archive runs, the archive commits would have to be authored on main after the fact — recoverable, but loses the unified PR audit trail.
+The archive-before-merge ordering keeps the PR's diff complete: every commit that went into the change (implementation, finalize.md, archive sync) is in the PR. If the PR is merged before archive runs, the archive commits would have to be authored on main after the fact — recoverable but loses the unified audit trail. Note that step 7 from v3 ("local worktree cleanup if still present") is no longer needed in Pattern A because the worktree is removed during finalize itself.
 
 #### Local-merge variant (acceptable for solo / local-only changes)
 
-If finalize chose Option 1 (Merge locally), the skill performs the merge inline and removes the worktree. `/opsx:archive` then runs on main directly. This inverts the archive/merge order vs. the canonical path. Acceptable for solo or local-only changes where the PR audit trail isn't relevant.
+If the user falls back to the escape hatch and picks the skill's Option 1 (Merge locally), the skill performs the merge into the integration branch inline and removes the worktree. `/opsx:archive` then runs on the integration branch directly. This inverts the archive/merge order vs. the canonical Pattern A path. Acceptable for solo or local-only changes where the PR audit trail isn't relevant.
 
 ---
 
@@ -337,6 +340,10 @@ In v3, `finalize` is promoted to a real DAG artifact (`generates: finalize.md`, 
 
 This change also moves the recommended retrospective guidance from the apply: block (where it was misplaced — apply ends with verify, not with archive) into finalize's instruction, where it logically belongs as a pre-archive activity.
 
+**v4 addendum — schema owns Pattern A's logic.**
+
+Promoting finalize to an artifact (v3) made the call site discoverable but kept the executor delegated to `superpowers:finishing-a-development-branch`. That skill's 4-option menu doesn't fit Superspec's PR-pre-review workflow: its "Option 2: push and create PR" creates a *new* PR from the worktree branch, leaving the user's pre-existing feature branch (with the artifacts and the open pre-review PR) orphaned, and its Option 1 ("Merge locally") merges into the integration branch instead of the feature branch. In v4, the finalize instruction executes Pattern A directly — merge worktree → feature branch, push to update the existing PR, post a code-reviewer comment — and demotes the skill to a manual escape hatch for non-Pattern-A flows (solo/no-PR, brand-new PR via the skill's Option 2, keep-as-is, discard). The schema borrows two narrow pieces from the skill (worktree-provenance guard, test-verify → merge structural pattern) with explicit attribution and a documented recreation method; everything else lives in the schema.
+
 ### Migration from schema v1
 
 If a project pinned to schema v1 has in-flight changes whose `verify.md` was authored before v2 landed but no `apply.md` exists in the change directory, `/opsx:verify` will report the change as blocked under v2 (missing required artifact `apply`).
@@ -351,6 +358,22 @@ If a project pinned to schema v2 has in-flight changes that already have `verify
 2. Re-run `/opsx:continue`; it should now advance past finalize, and the change is ready for `/opsx:archive`.
 
 This is a one-time migration cost per in-flight v2 change; no archived changes are affected.
+
+### Migration from schema v3
+
+In-flight v3 changes that already have `finalize.md` are unaffected — the file exists and `/opsx:continue` advances past finalize. Re-running finalize on those changes is optional.
+
+For v3 changes mid-flight with no `finalize.md`:
+
+1. `/opsx:continue` under v4 will surface the new Pattern A instruction. If your workflow matches Pattern A (feature branch + pre-review PR opened manually), the schema executes Pattern A automatically — no manual finalize.md authoring needed.
+2. If your workflow doesn't match (no PR yet, or you started on the integration branch), use the escape hatch documented in the finalize instruction.
+
+If you previously ran the v3 finalize and ended up with the two-branch schism (an orphan branch on remote and a PR from a different branch), the recommended cleanup is:
+- Decide which branch is the real PR. Usually that's the worktree-named branch.
+- Delete the orphan branch on the remote: `git push origin --delete <orphan>`.
+- Re-run finalize under v4 to ensure the receipt and comment are in place. (Or hand-write finalize.md and run only the comment subroutine.)
+
+This is a one-time migration cost per in-flight v3 change with a schism; archived changes are unaffected.
 
 ---
 
