@@ -1,4 +1,4 @@
-# sdd-plus-superpowers Schema
+# Superspec Schema
 
 Integrates OpenSpec's artifact governance workflow with Superpowers' execution skills into a single unified workflow.
 
@@ -20,7 +20,7 @@ Two alternatives were considered:
 A custom schema leverages OpenSpec's **natively supported project-level schema mechanism**:
 - The CLI validates the schema structure
 - `openspec schemas` lists it automatically
-- Each change can independently select a schema (`--schema spec-driven` or `--schema sdd-plus-superpowers`)
+- Each change can independently select a schema (`--schema spec-driven` or `--schema superspec`)
 - No existing SKILL.md or command files are modified
 
 ---
@@ -35,7 +35,7 @@ brainstorm ──→ proposal ──→ specs ──→ tasks ──→ plan ─
 
 Differences from `spec-driven`:
 
-| | spec-driven | sdd-plus-superpowers (v4) |
+| | spec-driven | superspec (v4) |
 |---|---|---|
 | Starting point | proposal (written manually) | **brainstorm** (invokes brainstorming skill) |
 | Endpoint | tasks (coarse-grained) | **finalize** (the git-side closeout: merge worktree → feature branch + push the branch + if a PR exists, post code-reviewer onboarding comment; archive follows as a CLI step) |
@@ -83,7 +83,7 @@ This is achieved through context injection (appending directives when invoking t
 
 ### Step-by-Step Flow
 ```bash
-/opsx:new my-feature --schema sdd-plus-superpowers
+/opsx:new my-feature --schema superspec
 /opsx:continue         # → brainstorm (interactive conversation)
 /opsx:continue         # → proposal
 /opsx:continue         # → design (optional, only when technical decisions need explanation)

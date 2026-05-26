@@ -1,8 +1,8 @@
 # OpenSpec × Superpowers Integration Guide
 
-> This document explains how the `sdd-plus-superpowers` schema integrates OpenSpec's artifact governance workflow with Superpowers' execution skills into a single workflow. It serves as a reference table for new member onboarding, change reviews, and as required reading before modifying the schema.
+> This document explains how the `superspec` schema integrates OpenSpec's artifact governance workflow with Superpowers' execution skills into a single workflow. It serves as a reference table for new member onboarding, change reviews, and as required reading before modifying the schema.
 >
-> Corresponding schema version: `sdd-plus-superpowers` v4
+> Corresponding schema version: `superspec` v4
 
 ---
 
@@ -104,9 +104,9 @@ Ask yourself: is this a behavioral change?
 
 | Type | Requires a change? | Which schema |
 |---|---|---|
-| New feature / new capability | Yes | `sdd-plus-superpowers` |
-| Breaking change | Yes | `sdd-plus-superpowers` |
-| Architecture change | Yes | `sdd-plus-superpowers` |
+| New feature / new capability | Yes | `superspec` |
+| Breaking change | Yes | `superspec` |
+| Architecture change | Yes | `superspec` |
 | Bug fix (restoring original behavior) | No | Direct PR |
 | Adding/backfilling tests | No | Direct PR |
 | Build tool tweaks (linter rules, coverage thresholds, etc.) | No | Direct PR |
@@ -120,7 +120,7 @@ This decision logic is documented in the "When Not to Create a Spec" section of 
 ### Step 1: Create a Change + Enter Brainstorming
 
 ```bash
-/opsx:new my-feature --schema sdd-plus-superpowers
+/opsx:new my-feature --schema superspec
 # → Creates openspec/changes/my-feature/ empty directory + .openspec.yaml
 # → Displays brainstorm artifact instructions
 ```
@@ -297,7 +297,7 @@ If the user falls back to the escape hatch and picks the skill's Option 1 (Merge
 | Scenario | Command |
 |---|---|
 | **After first clone** | `bash scripts/install-git-hooks.sh` |
-| New change (interactive, step by step) | `/opsx:new <name> --schema sdd-plus-superpowers` then `/opsx:continue` several times |
+| New change (interactive, step by step) | `/opsx:new <name> --schema superspec` then `/opsx:continue` several times |
 | New change (auto-fill all artifacts at once) | `/opsx:ff <name>` |
 | Resume an interrupted change | `/opsx:continue <name>` |
 | Enter implementation | `/opsx:apply <name>` |
@@ -384,13 +384,13 @@ This is a one-time migration cost per in-flight v3 change with a schism; archive
 
 ## 7. Recommended Snapshot Section for Projects Adopting This Schema
 
-It's recommended that every project adopting `sdd-plus-superpowers` maintains a snapshot in the following format in the relevant repo document, so new members can see "what this repo currently looks like" at a glance during onboarding:
+It's recommended that every project adopting `superspec` maintains a snapshot in the following format in the relevant repo document, so new members can see "what this repo currently looks like" at a glance during onboarding:
 
 ```markdown
 ## Project Status (snapshot: YYYY-MM-DD)
 
 - **OpenSpec CLI**: v<version>
-- **Schema**: `sdd-plus-superpowers` v<n>
+- **Schema**: `superspec` v<n>
 - **Specs (bounded-context granularity)**: <n> domains exist, <n> domains reserved for lazy backfill
   - Existing: `<capability-a>` / `<capability-b>` / ...
   - Reserved: `<capability-c>` / ...
@@ -413,7 +413,7 @@ The break points in traditional workflows are:
 - Requirements live in Slack / conversations → during apply the LLM works from memory → doesn't match the spec
 - Or: spec is written in Confluence → code is in the repo → the two drift apart
 
-The two-layer constraint of sdd-plus-superpowers solves this problem:
+The two-layer constraint of Superspec solves this problem:
 
 1. **OpenSpec's delta spec governance** → ensures "what to do" doesn't drift
 2. **Superpowers' subagent-driven + TDD + review** → ensures "what was done" has quality discipline
