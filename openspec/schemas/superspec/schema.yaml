@@ -8,20 +8,19 @@ description: >
   and a top-level apply: phase block (canonical /opsx:apply instruction
   body). Verify requires apply, so /opsx:verify cannot run before
   /opsx:apply has executed. Finalize requires verify and is reached via
-  /opsx:continue after verify reports PASS; its instruction invokes
-  superpowers:finishing-a-development-branch and records the outcome.
+  /opsx:continue after verify reports PASS; its instruction executes
+  Pattern A directly (merge worktree branch back into the feature
+  branch, push to update the existing PR, post a code-reviewer
+  onboarding comment on the PR) and records the outcome in finalize.md.
   Apply uses git worktrees + subagent-driven-development (brings TDD and
   code-review transitively). executing-plans is documented only as a
-  fallback for platforms without subagent support. v3: finalize is
-  promoted from a manual post-verify step (documented inside the apply:
-  block) to a real DAG artifact; /opsx:continue is now the OPSX-vocabulary
-  entry point for git-side closeout.
-  v4: finalize's instruction is rewritten to execute Pattern A
-  directly (merge the implementation worktree branch back into the
-  user's feature branch locally, push the feature branch to update
-  the existing PR) rather than invoking
-  superpowers:finishing-a-development-branch. The skill is retained
-  as a manual escape hatch for non-Pattern-A flows. Apply step 0
+  fallback for platforms without subagent support. v3 (historical):
+  finalize was promoted from a manual post-verify step to a real DAG
+  artifact, with its instruction invoking
+  superpowers:finishing-a-development-branch. v4 (current): finalize's
+  instruction is rewritten to execute Pattern A directly; the skill
+  is retained as a manual escape hatch for non-Pattern-A flows
+  (solo/no-PR, brand-new PR, keep-as-is, discard). Apply step 0
   wording is also updated to recommend a user-created feature branch
   as the canonical starting state (previously the schema recommended
   starting on the integration branch).
@@ -241,9 +240,12 @@ artifacts:
          commit range if known.
 
       Recommended convergence loop:
-      - PASS → /opsx:continue advances to the finalize artifact; invoke
-        superpowers:finishing-a-development-branch through it.
-        /opsx:archive runs once finalize.md exists.
+      - PASS → /opsx:continue advances to the finalize artifact, which
+        executes Pattern A directly (merge worktree → feature branch,
+        push to update PR, post code-reviewer comment). The skill
+        superpowers:finishing-a-development-branch is retained as a
+        manual escape hatch for non-Pattern-A flows. /opsx:archive
+        runs once finalize.md exists.
       - PASS_WITH_WARNINGS → same path as PASS; warnings are recorded
         but do not block.
       - FAIL with code-fixable items → return to apply, re-run, re-verify.
@@ -667,8 +669,11 @@ apply:
 
        Convergence loop — react to the verify outcome:
        - PASS or PASS_WITH_WARNINGS → proceed via /opsx:continue to the
-         finalize artifact (writes finalize.md after invoking
-         superpowers:finishing-a-development-branch). /opsx:archive
+         finalize artifact, which executes Pattern A directly (merge
+         worktree → feature branch, push to update PR, post
+         code-reviewer comment) and writes finalize.md. The skill
+         superpowers:finishing-a-development-branch is retained as a
+         manual escape hatch for non-Pattern-A flows. /opsx:archive
          runs once finalize.md exists.
        - FAIL with code-fixable items → return to step 2 (Executor),
          re-run with the same iteration mechanics (apply.md is

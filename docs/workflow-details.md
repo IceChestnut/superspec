@@ -16,7 +16,7 @@ Use it as the long-form companion to the [workflow overview](workflow.md), [top-
 | | 6 | `plan` | Make the work executable. | Superpowers: `writing-plans` |
 | **3. Code Implementation** | 7 | `apply` | Change the system. | Superpowers: `using-git-worktrees`, `subagent-driven-development`, `test-driven-development`, `requesting-code-review` |
 | **4. Spec Validation** | 8 | `verify` | Prove it matches intent. | OpenSpec: `/opsx:verify` |
-| **5. Finalization** | 9 | `finalize` | Close out the git side cleanly before archive. | Superpowers: `finishing-a-development-branch` (via `/opsx:continue`) |
+| **5. Finalization** | 9 | `finalize` | Close out the git side cleanly before archive. | Schema-executed Pattern A (v4); `finishing-a-development-branch` is escape hatch |
 | **6. Archival** | 10 | `archive` boundary | Sync deltas and freeze the change. | OpenSpec: `/opsx:archive` |
 
 Read top-to-bottom for the full lifecycle, or jump to any step.
@@ -188,7 +188,7 @@ The Code Implementation phase produces the actual code for the change, executed 
    - **`requesting-code-review`** — after each task, a code-reviewer subagent checks spec compliance and code quality. A final review runs over the whole implementation before apply concludes.
    - As coarse tasks complete, `tasks.md` checkboxes flip to `- [x]`.
 3. **Receipt** — at the end of the phase, a minimal `apply.md` is written per `openspec/schemas/superspec/templates/apply.md`: iteration counter, applied-at timestamp, executor identity, worktree path, branch, commit range, and tasks completed X of Y. This is the v2 DAG artifact that gates `verify`. If `apply.md` already exists, the iteration counter is incremented.
-4. **`finishing-a-development-branch`** — only invoked at the very end; covered in Phase 5 / Step 9 below.
+4. **Phase 5 closeout** — Pattern A (schema-executed in v4) handles the git-side closeout; covered in Phase 5 / Step 9 below. The skill `finishing-a-development-branch` is retained as a manual escape hatch only.
 
 **Pre-flight requirement.** Before creating the worktree, the change directory `openspec/changes/<name>/` must already be committed on the current branch. Otherwise, when the worktree merges back, git will refuse with "untracked files would be overwritten by merge."
 
@@ -402,7 +402,7 @@ Schema v4 owns Pattern A's execution but borrows two narrow pieces of logic from
 1. **Worktree-cleanup provenance guard** — only remove a worktree if its path is under `.worktrees/`, `worktrees/`, or `~/.config/superpowers/worktrees/`. Otherwise the harness owns the workspace and we leave it in place.
 2. **Structural pattern** — test-verify in worktree → merge → test-verify on merged result → cleanup → delete branch. Taken from the skill's Step 5 Option 1.
 
-Each borrow is annotated inline in the finalize artifact instruction with the upstream URL (`https://github.com/obra/superpowers/blob/main/skills/finishing-a-development-branch/SKILL.md`) and the commit SHA at the time of the port.
+Each borrow is annotated inline in the finalize artifact instruction with the upstream URL (`https://github.com/obra/superpowers/blob/main/skills/finishing-a-development-branch/SKILL.md`) and the commit SHA at the time of the port (`f2cbfbefebbfef77321e4c9abc9e949826bea9d7` as of v4).
 
 **Recreation method.** If the upstream skill evolves and we need to re-port: diff the relevant steps against the upstream skill's current Step 5 Option 1 and Step 6, port any meaningful behavioral changes back into the finalize instruction, then update the inline SHA. Recommended cadence: re-check on every upstream Superpowers minor version bump. No automation — discipline by convention.
 
