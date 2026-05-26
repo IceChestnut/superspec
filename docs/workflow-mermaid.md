@@ -77,9 +77,11 @@ flowchart TD
     %% ---------- Phase 5 ----------
     subgraph P5[" ⚡ &nbsp;Phase 5 · Finalization &nbsp;<code>/opsx:continue</code> → <code>finalize</code> "]
         direction TB
-        P5a["⚡ <b>finishing-a-development-branch</b><br/>Merge · PR · worktree teardown"]
+        P5a["⚡ <b>Pattern A (schema-executed, v4)</b><br/>Merge worktree → feature branch · push to update PR<br/>· post code-reviewer onboarding comment"]
         P5b[/"📄 finalize.md"/]
+        P5c["⚡ <i>finishing-a-development-branch</i><br/>Manual escape hatch only"]
         P5a --> P5b
+        P5a -.fallback.-> P5c
     end
     class P5 sp
 
@@ -105,7 +107,7 @@ flowchart TD
 | 2 | Artifact Creation    | ⚡📋   | `/opsx:continue` · `superpowers:writing-plans`                                                                                       | `proposal.md` · `design.md` · `specs/*/spec.md` · `tasks.md` · `plan.md` |
 | 3 | Code Implementation  | ⚡      | `using-git-worktrees` · `subagent-driven-development` · `test-driven-development` · `requesting-code-review`                         | Code, tests, commits in `.worktrees/<name>/`           |
 | 4 | Spec Validation      | 📋      | `/opsx:verify`                                                                                                                       | `verify.md`                                            |
-| 5 | Finalization         | ⚡      | `/opsx:continue` → `finalize` · `superpowers:finishing-a-development-branch`                                                         | `finalize.md` (git closeout receipt) · optional `retrospective.md` |
+| 5 | Finalization         | ⚡      | `/opsx:continue` → `finalize` (schema-executed Pattern A, v4) · escape hatch: `superpowers:finishing-a-development-branch`            | `finalize.md` + PR onboarding comment · optional `retrospective.md` |
 | 6 | Archival             | 📋      | `/opsx:archive` · `openspec archive`                                                                                                 | Updated `openspec/specs/` · archived change directory   |
 
 ---
