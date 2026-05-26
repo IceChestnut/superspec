@@ -77,7 +77,7 @@ This is achieved through context injection (appending directives when invoking t
 /opsx:ff my-feature    # End-to-end: create directory + brainstorm + proposal + design + specs + tasks + plan
 /opsx:apply            # worktree + subagent-driven-development (writes apply.md)
 /opsx:verify           # 5 OpenSpec checks (writes verify.md; requires apply.md)
-/opsx:continue         # → finalize (invokes superpowers:finishing-a-development-branch, writes finalize.md; v3)
+/opsx:continue         # → finalize (Pattern A: merges worktree → feature branch, updates PR, writes finalize.md, posts code-reviewer comment; v4)
 /opsx:archive          # sync delta specs + archive change dir
 ```
 
@@ -92,7 +92,7 @@ This is achieved through context injection (appending directives when invoking t
 /opsx:continue         # → plan
 /opsx:apply            # writes apply.md
 /opsx:verify           # writes verify.md (requires apply.md)
-/opsx:continue         # → finalize (invokes superpowers:finishing-a-development-branch, writes finalize.md; v3)
+/opsx:continue         # → finalize (Pattern A: merges worktree → feature branch, updates PR, writes finalize.md, posts code-reviewer comment; v4)
 /opsx:archive          # sync delta specs + archive change dir
 ```
 
