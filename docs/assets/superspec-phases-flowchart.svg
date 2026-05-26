@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1840"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1900"
      font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
 
   <defs>
@@ -63,8 +63,8 @@
   </defs>
 
   <!-- ================== background ================== -->
-  <rect width="900" height="1840" fill="#fafafa"/>
-  <rect width="900" height="1840" fill="url(#dots)" opacity="0.6"/>
+  <rect width="900" height="1900" fill="#fafafa"/>
+  <rect width="900" height="1900" fill="url(#dots)" opacity="0.6"/>
 
   <!-- ================== title ================== -->
   <text x="450" y="50" text-anchor="middle" font-size="26" font-weight="700" fill="#0f172a">
@@ -283,33 +283,45 @@
   <!-- ========== PHASE 5 · FINALIZATION ======================= -->
   <!-- ========================================================= -->
   <g transform="translate(80, 1328)">
-    <rect x="0" y="0" width="740" height="124" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="1" filter="url(#cardShadow)"/>
+    <rect x="0" y="0" width="740" height="184" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="1" filter="url(#cardShadow)"/>
     <path d="M 0 8 L 0 44 L 740 44 L 740 8 Q 740 0 732 0 L 8 0 Q 0 0 0 8 Z" fill="#fef3c7"/>
     <circle cx="26" cy="22" r="14" fill="#f59e0b"/>
     <text x="26" y="27" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">5</text>
     <text x="50" y="27" font-size="14" font-weight="700" fill="#92400e" letter-spacing="1.2">PHASE 5 · FINALIZATION</text>
     <!-- entrypoint chip -->
-    <rect x="518" y="11" width="146" height="22" rx="4" fill="#ffffff" stroke="#f59e0b" stroke-width="1"/>
-    <text x="591" y="26" text-anchor="middle" class="mono" font-size="11" font-weight="600" fill="#92400e">/opsx:continue</text>
+    <rect x="450" y="11" width="214" height="22" rx="4" fill="#ffffff" stroke="#f59e0b" stroke-width="1"/>
+    <text x="557" y="26" text-anchor="middle" class="mono" font-size="11" font-weight="600" fill="#92400e">/opsx:continue → finalize</text>
     <g color="#92400e"><use href="#ic-bolt" x="708" y="14" width="16" height="16"/></g>
     <line x1="0" y1="44" x2="740" y2="44" stroke="#fde68a" stroke-width="1"/>
 
-    <!-- substep: finishing-a-development-branch -->
-    <g transform="translate(20, 64)">
+    <!-- substep 1: Pattern A (schema-executed, v4) -->
+    <g transform="translate(20, 60)">
       <circle cx="14" cy="14" r="13" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
       <g color="#92400e"><use href="#ic-bolt" x="7" y="7" width="14" height="14"/></g>
-      <text x="36" y="13" class="mono" font-size="13" font-weight="600" fill="#0f172a">superpowers:finishing-a-development-branch</text>
-      <text x="36" y="30" font-size="12" fill="#475569">4 options · merge locally · push &amp; create PR · keep as-is · discard · worktree cleanup per outcome</text>
-      <text x="36" y="46" font-size="11" fill="#64748b">→ outputs <tspan class="mono" fill="#0f172a">finalize.md</tspan> · Outcome · Final state · PR URL · Cleanup</text>
+      <text x="36" y="13" class="mono" font-size="13" font-weight="600" fill="#0f172a">Pattern A<tspan font-weight="400" fill="#64748b" class="mono">  (schema-executed, v4)</tspan></text>
+      <text x="36" y="30" font-size="12" fill="#475569">Merge worktree → feature branch · push to update PR · post code-reviewer onboarding comment</text>
+      <text x="36" y="46" font-size="11" fill="#64748b">→ outputs <tspan class="mono" fill="#0f172a">finalize.md</tspan> · Outcome · Final state · PR URL · Cleanup · onboarding comment URL</text>
+    </g>
+
+    <!-- fallback connector (dotted) from substep 1 → substep 2 -->
+    <line x1="34" y1="118" x2="34" y2="138" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3,3" marker-end="url(#arrow)"/>
+    <text x="46" y="132" font-size="10" font-style="italic" fill="#92400e">fallback</text>
+
+    <!-- substep 2: finishing-a-development-branch (manual escape hatch) -->
+    <g transform="translate(20, 140)">
+      <circle cx="14" cy="14" r="13" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="2,2"/>
+      <g color="#92400e"><use href="#ic-bolt" x="7" y="7" width="14" height="14"/></g>
+      <text x="36" y="13" class="mono" font-size="13" font-weight="600" fill="#0f172a">superpowers:finishing-a-development-branch<tspan font-weight="400" fill="#64748b" class="mono">  (escape hatch)</tspan></text>
+      <text x="36" y="30" font-size="12" fill="#475569">Manual escape hatch only · invoked when Pattern A cannot execute (non-PR flow, missing remote, manual override)</text>
     </g>
   </g>
 
-  <line x1="450" y1="1452" x2="450" y2="1488" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="450" y1="1512" x2="450" y2="1548" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
 
   <!-- ========================================================= -->
   <!-- ========== PHASE 6 · ARCHIVAL =========================== -->
   <!-- ========================================================= -->
-  <g transform="translate(80, 1496)">
+  <g transform="translate(80, 1556)">
     <rect x="0" y="0" width="740" height="140" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="1" filter="url(#cardShadow)"/>
     <path d="M 0 8 L 0 44 L 740 44 L 740 8 Q 740 0 732 0 L 8 0 Q 0 0 0 8 Z" fill="#dbeafe"/>
     <circle cx="26" cy="22" r="14" fill="#3b82f6"/>
@@ -332,10 +344,10 @@
     </g>
   </g>
 
-  <line x1="450" y1="1636" x2="450" y2="1672" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="450" y1="1696" x2="450" y2="1732" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
 
   <!-- ================== END NODE ================== -->
-  <g transform="translate(280, 1680)">
+  <g transform="translate(280, 1740)">
     <rect x="0" y="0" width="340" height="44" rx="22" fill="#dcfce7" stroke="#16a34a" stroke-width="2" filter="url(#cardShadow)"/>
     <g color="#16a34a"><use href="#ic-check" x="20" y="14" width="16" height="16"/></g>
     <text x="180" y="28" text-anchor="middle" font-size="14" font-weight="600" fill="#14532d">
@@ -344,7 +356,7 @@
   </g>
 
   <!-- ================== footer ================== -->
-  <text x="450" y="1778" text-anchor="middle" font-size="11" fill="#94a3b8">
+  <text x="450" y="1838" text-anchor="middle" font-size="11" fill="#94a3b8">
     Superspec · OpenSpec orchestrates · Superpowers executes · See docs/workflow-details.md for the 10-step expansion
   </text>
 
