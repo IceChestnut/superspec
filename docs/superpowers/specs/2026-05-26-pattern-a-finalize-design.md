@@ -81,17 +81,31 @@ The finalize instruction owns the full Pattern A sequence. Concretely the agent 
 
 ### Code-reviewer onboarding comment
 
-Assumption: the human who pre-reviewed the proposal/specs (logic review) may not be the same human who reviews the code. The code reviewer often comes in cold, sees a PR diff, and has to reverse-engineer the intent of the change from the artifacts. The schema posts a single PR comment at finalize time to orient them.
+Assumption: the human who pre-reviewed the proposal/specs (logic review) may not be the same human who reviews the code. The code reviewer often comes in cold, sees a PR diff, and has to reverse-engineer the intent of the change from the artifacts. **Whenever a PR exists at finalize completion — regardless of how it was created — the schema posts (or updates) a single onboarding comment on that PR to orient the code reviewer.**
 
-The comment runs after the push (step 10) completes, only when a PR exists for the feature branch. Discovery:
+**Single comment-posting subroutine, invoked from both flows.** The comment logic is defined once and invoked from two places:
+
+- **Pattern A path (canonical)**: invoked as step 11, after the push in step 10 completes.
+- **Escape-hatch path**: the finalize instruction's escape-hatch paragraph explicitly tells the user, after their manual skill invocation returns and they have hand-written finalize.md, to run the comment subroutine if a PR was created or already exists for the branch. (Applies to skill Option 2 — push and create PR. Options 1, 3, 4 have no PR and the subroutine is skipped.)
+
+This guarantees that any path through finalize that leaves a PR on the remote also leaves a code-reviewer comment on that PR.
+
+**Comment-posting subroutine.** Discovery first:
 
 ```
 PR_NUMBER=$(gh pr view <feature-branch> --json number --jq .number 2>/dev/null)
 ```
 
-If `PR_NUMBER` is empty (no PR found), skip the comment and continue. The escape-hatch flows that don't open a PR (Option 1 merge-locally, Option 3 keep-as-is, Option 4 discarded) naturally fall into this skip case. The escape-hatch Option 2 (skill created a new PR) reaches this step with a PR present, so it also gets a comment.
+If `PR_NUMBER` is empty, skip the subroutine and record `PR comment: skipped (no PR)` in finalize.md. Otherwise continue.
 
-**Comment body structure** (markdown, posted via `gh pr comment`):
+**Idempotency.** The body begins with the marker `<!-- superspec:finalize-comment -->`. Before posting, list existing comments (`gh api repos/<owner>/<repo>/issues/<PR_NUMBER>/comments`), find one whose body starts with the marker, and:
+
+- If found → edit in place (`gh api -X PATCH repos/<owner>/<repo>/issues/comments/<COMMENT_ID> -f body=@-`). Records `PR comment: edited-existing`.
+- If not found → post a new comment (`gh pr comment <PR_NUMBER> --body-file -`). Records `PR comment: posted`.
+
+This keeps the PR conversation clean if finalize is re-entered (iteration loops, manual re-runs, or moving from escape-hatch Option 2 to a later Pattern A re-run).
+
+**Comment body — explicitly a summary, not copy-paste.** The placeholders below are **bullet-pointed targets the agent must summarize in its own words**. The agent MUST NOT copy verbatim from `proposal.md`, `specs/*/spec.md`, `design.md`, or `retrospective.md`. The intent is a short orienting brief, not a duplicate of the artifacts (which the reviewer can read in full at the linked paths). Total target length: **200–400 words**, hard ceiling 600 words. If a summary would exceed the ceiling, prefer cutting detail over truncating mid-sentence.
 
 ```markdown
 <!-- superspec:finalize-comment -->
@@ -101,11 +115,11 @@ This PR has just been updated with the implementation and the full openspec chan
 
 ### What this change is
 
-<extracted from proposal.md — Why section, 1-3 sentences>
+<2–3 sentences SUMMARIZING proposal.md's Why and What Changes sections in the agent's own words. Do NOT paste from proposal.md. Aim for the elevator-pitch a code reviewer needs to know what they're looking at.>
 
 ### Capabilities affected
 
-<from proposal.md Capabilities section — bulleted: New + Modified>
+<Bulleted list, one bullet per capability. Use the capability name from proposal.md, then a half-line summary of what it does (new) or what changed (modified). Capability NAMES are taken verbatim — they're identifiers. Summaries are paraphrased.>
 
 ### Suggested code-reviewer reading order
 
@@ -123,32 +137,35 @@ This PR has just been updated with the implementation and the full openspec chan
 - **Test baseline at finish**: passing.
 
 ### Notable from the implementer
-<from retrospective.md "Plan deviations" + "Surprises" sections if retrospective.md exists; otherwise: "No retrospective notes provided.">
+
+<2–4 bullets summarizing retrospective.md's Plan deviations + Surprises sections in the agent's own words. Skip surprises that don't affect review. If retrospective.md does not exist: "No retrospective notes provided."  Do NOT paste from retrospective.md.>
 
 ---
-*Auto-generated by Superspec finalize (Pattern A). Full receipt at `openspec/changes/<change-name>/finalize.md`. Re-running finalize will edit this comment in place, not duplicate it.*
+*Auto-generated by Superspec finalize. Full receipt at `openspec/changes/<change-name>/finalize.md`. Re-running finalize will edit this comment in place, not duplicate it.*
 ```
 
-**Idempotency / re-run behavior.** The leading `<!-- superspec:finalize-comment -->` HTML comment is a marker. Before posting, the schema instructs the agent to list existing PR comments (`gh api repos/<owner>/<repo>/issues/<PR_NUMBER>/comments`), search for one whose body starts with that marker, and:
+The Implementation summary section is the only one where values are **extracted as-is** (counts, status enums) rather than summarized — these are facts, not prose.
 
-- If found → edit in place (`gh api -X PATCH repos/<owner>/<repo>/issues/comments/<COMMENT_ID> -f body=@-`), preserving its place in the PR conversation.
-- If not found → post a new comment.
+**Failure handling.** The comment-posting subroutine is non-blocking. If `gh` is unavailable, the PR is in a draft state that disallows comments, or the API call fails for any reason, the agent records the failure in finalize.md (`PR comment: failed — <reason>`) but does not roll back the merge/push. The change is still git-clean; the comment is a nice-to-have, not a correctness gate.
 
-This keeps the PR clean even if the user re-enters finalize (e.g., after an iteration loop that updates tasks/verify status).
-
-**Failure handling.** The comment-posting step is non-blocking. If `gh` is unavailable, the PR is in a draft state that disallows comments, or the API call fails for any reason, the agent records the failure in finalize.md (`PR comment: failed — <reason>`) but does not roll back the merge/push. The change is still git-clean; the comment is a nice-to-have, not a correctness gate.
-
-**Where the comment content comes from.** All bracketed sections in the template are filled from the change directory's own artifacts. No external state required. If a referenced artifact is missing (e.g., no retrospective.md), the corresponding section uses the documented fallback wording shown above.
+**Where the comment content comes from.** All `<bracketed>` placeholders are filled by summarizing the change directory's own artifacts. No external state required. If a referenced artifact is missing (e.g., no retrospective.md, no design.md), the corresponding section uses the documented fallback wording or is omitted entirely (the reading-order step for design.md is conditional).
 
 ### Escape hatch: manual skill invocation
 
 The finalize instruction's closing paragraph names `superpowers:finishing-a-development-branch` as the manual fallback for situations Pattern A doesn't cover:
 
 - Solo / no-PR workflow → skill's Option 1 (merge locally to main).
+- Push and create PR (rare in Pattern A's expected flow but possible) → skill's Option 2.
 - Iteration with worktree preserved → skill's Option 3 (keep as-is).
 - Discard → skill's Option 4 (force-delete with typed confirmation).
 
-The schema does not execute these paths itself. The instruction tells the user to invoke the skill via the Skill tool, pick the option, then hand-write finalize.md from `templates/finalize.md` once the skill returns.
+The schema does not execute these paths itself. The instruction tells the user to:
+
+1. Invoke the skill via the Skill tool and pick the option.
+2. Once the skill returns, hand-write `finalize.md` from `templates/finalize.md`.
+3. **Run the comment-posting subroutine** (defined above) regardless of which option ran. The subroutine self-skips when no PR exists (Options 1, 3, 4) and posts/edits the orientation comment when a PR is present (Option 2 created one; an earlier Pattern A or manual push may also have left one).
+
+Step 3 is the explicit guarantee that the code-reviewer comment exists on any PR that exists at finalize completion, even outside the Pattern A automation.
 
 ### `apply` step 0 wording flip
 
@@ -259,7 +276,10 @@ No content change needed; the convergence-loop reminder already says "PASS → `
 - Template-instruction alignment: finalize's instruction references `pr-updated`; templates/finalize.md must list `pr-updated` as a valid Outcome.
 - Manual integration test: in a test project, run the full Pattern A flow against this schema. Confirm: only one feature branch on remote, PR contains finalize.md before the second-round code review begins, archive runs on the same branch, single merge closes the PR.
 - Manual escape-hatch test: in a test project, deliberately skip the manual PR-open step and run `/opsx:continue`. Confirm: the instruction's escape-hatch paragraph triggers, the user can invoke the skill manually, and writing finalize.md by hand from the template works.
-- Manual code-reviewer-comment test: run Pattern A end-to-end. Confirm a single PR comment appears with the marker, the reading-order list, and the fallback wording for any artifact that wasn't present (e.g., no design.md, no retrospective.md). Re-run finalize against the same PR; confirm the existing comment is **edited in place**, not duplicated.
+- Manual code-reviewer-comment test (Pattern A): run Pattern A end-to-end. Confirm a single PR comment appears with the marker, the reading-order list, and the fallback wording for any artifact that wasn't present (e.g., no design.md, no retrospective.md). Re-run finalize against the same PR; confirm the existing comment is **edited in place**, not duplicated.
+- Comment test (escape-hatch Option 2): run finalize via the escape hatch, picking the skill's Option 2 to create a new PR. After the skill returns, hand-write finalize.md, then run the comment subroutine per step 3 of the escape-hatch instructions. Confirm the same orientation comment lands on the just-created PR.
+- Comment test (escape-hatch Options 1/3/4): repeat with each of the no-PR options. Confirm the comment subroutine self-skips and finalize.md records `PR comment: skipped (no PR)`.
+- Summarization test: prepare a change with a long, verbose proposal.md and retrospective.md. Run finalize. Confirm the resulting comment is 200–400 words, in the agent's own paraphrased language, and does **not** contain copy-pasted sentences from the source artifacts (spot-check by grepping for distinctive phrases from the source).
 - Failure-tolerance test: simulate a `gh` failure (e.g., temporary auth issue or rate-limit) during the comment step; confirm finalize still completes with the merge/push intact and finalize.md records `PR comment: failed — <reason>`.
 
 ## Edge cases
