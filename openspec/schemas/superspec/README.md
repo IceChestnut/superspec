@@ -38,7 +38,7 @@ Differences from `spec-driven`:
 | | spec-driven | sdd-plus-superpowers (v4) |
 |---|---|---|
 | Starting point | proposal (written manually) | **brainstorm** (invokes brainstorming skill) |
-| Endpoint | tasks (coarse-grained) | **finalize** (Pattern A: merge worktree → feature branch + push to update PR + code-reviewer onboarding comment; archive follows as a CLI step) |
+| Endpoint | tasks (coarse-grained) | **finalize** (the git-side closeout: merge worktree → feature branch + push to update PR + code-reviewer onboarding comment; archive follows as a CLI step) |
 | apply requires | tasks | **plan** |
 | apply method | Standard task-by-task | **worktree + subagent-driven-development** |
 | Additional artifacts | — | brainstorm, plan, apply (receipt), **finalize (receipt)** |
@@ -55,7 +55,7 @@ Differences from `spec-driven`:
 | plan artifact | `superpowers:writing-plans` | artifact instruction |
 | apply phase | `superpowers:using-git-worktrees` | apply instruction |
 | apply phase | `superpowers:subagent-driven-development` | apply instruction |
-| finalize artifact | `superpowers:finishing-a-development-branch` | **Manual escape hatch only (v4)** — Pattern A is executed by the schema directly |
+| finalize artifact | `superpowers:finishing-a-development-branch` | **Manual escape hatch only (v4)** — the git-side closeout is executed by the schema directly |
 
 All integrations are achieved through the `instruction` field in schema.yaml — directing the AI to invoke the corresponding skill at the appropriate time via the Skill tool. No Superpowers skill files are modified.
 
@@ -77,7 +77,7 @@ This is achieved through context injection (appending directives when invoking t
 /opsx:ff my-feature    # End-to-end: create directory + brainstorm + proposal + design + specs + tasks + plan
 /opsx:apply            # worktree + subagent-driven-development (writes apply.md)
 /opsx:verify           # 5 OpenSpec checks (writes verify.md; requires apply.md)
-/opsx:continue         # → finalize (Pattern A: merges worktree → feature branch, updates PR, writes finalize.md, posts code-reviewer comment; v4)
+/opsx:continue         # → finalize (the git-side closeout: merges worktree → feature branch, updates PR, writes finalize.md, posts code-reviewer comment; v4)
 /opsx:archive          # sync delta specs + archive change dir
 ```
 
@@ -92,7 +92,7 @@ This is achieved through context injection (appending directives when invoking t
 /opsx:continue         # → plan
 /opsx:apply            # writes apply.md
 /opsx:verify           # writes verify.md (requires apply.md)
-/opsx:continue         # → finalize (Pattern A: merges worktree → feature branch, updates PR, writes finalize.md, posts code-reviewer comment; v4)
+/opsx:continue         # → finalize (the git-side closeout: merges worktree → feature branch, updates PR, writes finalize.md, posts code-reviewer comment; v4)
 /opsx:archive          # sync delta specs + archive change dir
 ```
 
@@ -135,7 +135,7 @@ In v2 the post-verify git closeout (PR creation / merge / worktree cleanup) live
 
 v3 promotes `finalize` to a real DAG artifact (`generates: finalize.md`, `requires: [verify]`). `/opsx:continue` surfaces its instruction after verify completes, which invokes `superpowers:finishing-a-development-branch` and records the outcome. The recommended retrospective guidance moves from the apply: block (where it was misplaced — apply ends with verify) into finalize's instruction, where it belongs as a pre-archive activity. `/opsx:archive` is unchanged; it remains an OpenSpec CLI command that runs after finalize and is documented in `docs/workflow-details.md` Phase 6 with the canonical archive-before-merge golden path.
 
-### Why We Own Pattern A's Logic Instead of Calling the Skill (v4)
+### Why We Own the Git-Side Closeout's Logic Instead of Calling the Skill (v4)
 
 The v3 finalize artifact invoked `superpowers:finishing-a-development-branch` and let its 4-option menu drive the closeout. In practice this produced two failure modes for any team using the canonical Superspec PR-pre-review workflow:
 
@@ -144,7 +144,7 @@ The v3 finalize artifact invoked `superpowers:finishing-a-development-branch` an
 
 The skill's "base branch" is `main`; its "feature branch" is the worktree branch. Neither aligns with Superspec's "merge worktree into the user's feature branch, then push to update the existing PR" intent. Overriding the skill's interpretation from the schema instruction was attempted and judged too brittle.
 
-v4's resolution: the schema executes Pattern A directly (merge worktree → feature branch → push → code-reviewer comment). Two narrow pieces are borrowed from the skill with explicit attribution and a documented recreation method — the worktree-cleanup provenance guard and the test-verify → merge → test-verify → cleanup structural pattern. The skill remains a first-class manual escape hatch for users whose workflow doesn't match Pattern A (solo / no-PR, brand-new PR, keep-as-is, discard).
+v4's resolution: the schema executes the git-side closeout directly (merge worktree → feature branch → push → code-reviewer comment). Two narrow pieces are borrowed from the skill with explicit attribution and a documented recreation method — the worktree-cleanup provenance guard and the test-verify → merge → test-verify → cleanup structural pattern. The skill remains a first-class manual escape hatch for users whose workflow doesn't match the git-side closeout (solo / no-PR, brand-new PR, keep-as-is, discard).
 
 ### Fallback Strategy
 

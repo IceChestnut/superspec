@@ -294,11 +294,11 @@
     <g color="#92400e"><use href="#ic-bolt" x="708" y="14" width="16" height="16"/></g>
     <line x1="0" y1="44" x2="740" y2="44" stroke="#fde68a" stroke-width="1"/>
 
-    <!-- substep 1: Pattern A (schema-executed, v4) -->
+    <!-- substep 1: Git-side closeout (schema-executed, v4) -->
     <g transform="translate(20, 60)">
       <circle cx="14" cy="14" r="13" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
       <g color="#92400e"><use href="#ic-bolt" x="7" y="7" width="14" height="14"/></g>
-      <text x="36" y="13" class="mono" font-size="13" font-weight="600" fill="#0f172a">Pattern A<tspan font-weight="400" fill="#64748b" class="mono">  (schema-executed, v4)</tspan></text>
+      <text x="36" y="13" class="mono" font-size="13" font-weight="600" fill="#0f172a">Git-side closeout<tspan font-weight="400" fill="#64748b" class="mono">  (schema-executed, v4)</tspan></text>
       <text x="36" y="30" font-size="12" fill="#475569">Merge worktree → feature branch · push to update PR · post code-reviewer onboarding comment</text>
       <text x="36" y="46" font-size="11" fill="#64748b">→ outputs <tspan class="mono" fill="#0f172a">finalize.md</tspan> · Outcome · Final state · PR URL · Cleanup · onboarding comment URL</text>
     </g>
@@ -312,7 +312,7 @@
       <circle cx="14" cy="14" r="13" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="2,2"/>
       <g color="#92400e"><use href="#ic-bolt" x="7" y="7" width="14" height="14"/></g>
       <text x="36" y="13" class="mono" font-size="13" font-weight="600" fill="#0f172a">superpowers:finishing-a-development-branch<tspan font-weight="400" fill="#64748b" class="mono">  (escape hatch)</tspan></text>
-      <text x="36" y="30" font-size="12" fill="#475569">Manual escape hatch only · invoked when Pattern A cannot execute (non-PR flow, missing remote, manual override)</text>
+      <text x="36" y="30" font-size="12" fill="#475569">Manual escape hatch only · invoked when the git-side closeout cannot execute (non-PR flow, missing remote, manual override)</text>
     </g>
   </g>
 

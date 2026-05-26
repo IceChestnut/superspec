@@ -88,11 +88,11 @@ Scenarios in `specs/*.md`:
 
 > **Convergence loop reminder**:
 > - PASS / PASS_WITH_WARNINGS → `/opsx:continue` advances to the finalize
->   artifact, which executes Pattern A directly (merges worktree → feature
->   branch, pushes to update existing PR, posts code-reviewer onboarding
->   comment). The skill `superpowers:finishing-a-development-branch` is
->   an escape hatch for non-Pattern-A flows. Then `/opsx:archive` once
->   finalize.md exists.
+>   artifact, which executes the git-side closeout directly (merges
+>   worktree → feature branch, pushes to update existing PR, posts
+>   code-reviewer onboarding comment). The skill
+>   `superpowers:finishing-a-development-branch` is an escape hatch for
+>   non-canonical flows. Then `/opsx:archive` once finalize.md exists.
 > - FAIL with items fixable by code change → return to the apply artifact
 >   and re-run `/opsx:apply`, then re-run `/opsx:verify` — this overwrites
 >   both apply.md and verify.md with the next iteration.

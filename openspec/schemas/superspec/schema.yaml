@@ -9,8 +9,8 @@ description: >
   body). Verify requires apply, so /opsx:verify cannot run before
   /opsx:apply has executed. Finalize requires verify and is reached via
   /opsx:continue after verify reports PASS; its instruction executes
-  Pattern A directly (merge worktree branch back into the feature
-  branch, push to update the existing PR, post a code-reviewer
+  the git-side closeout directly (merge worktree branch back into the
+  feature branch, push to update the existing PR, post a code-reviewer
   onboarding comment on the PR) and records the outcome in finalize.md.
   Apply uses git worktrees + subagent-driven-development (brings TDD and
   code-review transitively). executing-plans is documented only as a
@@ -18,8 +18,8 @@ description: >
   finalize was promoted from a manual post-verify step to a real DAG
   artifact, with its instruction invoking
   superpowers:finishing-a-development-branch. v4 (current): finalize's
-  instruction is rewritten to execute Pattern A directly; the skill
-  is retained as a manual escape hatch for non-Pattern-A flows
+  instruction is rewritten to execute the git-side closeout directly;
+  the skill is retained as a manual escape hatch for non-canonical flows
   (solo/no-PR, brand-new PR, keep-as-is, discard). Apply step 0
   wording is also updated to recommend a user-created feature branch
   as the canonical starting state (previously the schema recommended
@@ -241,10 +241,10 @@ artifacts:
 
       Recommended convergence loop:
       - PASS → /opsx:continue advances to the finalize artifact, which
-        executes Pattern A directly (merge worktree → feature branch,
-        push to update PR, post code-reviewer comment). The skill
-        superpowers:finishing-a-development-branch is retained as a
-        manual escape hatch for non-Pattern-A flows. /opsx:archive
+        executes the git-side closeout directly (merge worktree →
+        feature branch, push to update PR, post code-reviewer comment).
+        The skill superpowers:finishing-a-development-branch is retained
+        as a manual escape hatch for non-canonical flows. /opsx:archive
         runs once finalize.md exists.
       - PASS_WITH_WARNINGS → same path as PASS; warnings are recorded
         but do not block.
@@ -262,23 +262,23 @@ artifacts:
 
   - id: finalize
     generates: finalize.md
-    description: Pattern A git-side closeout — merge worktree back into feature branch and update PR
+    description: Git-side closeout — merge worktree back into feature branch and update PR
     template: finalize.md
     instruction: |
-      Pattern A is Superspec's canonical finalize flow: merge the
-      implementation worktree branch back into your feature branch
-      locally, push the feature branch to update the existing PR
-      (the one opened manually between plan and apply for spec
+      The git-side closeout is Superspec's canonical finalize flow:
+      merge the implementation worktree branch back into your feature
+      branch locally, push the feature branch to update the existing
+      PR (the one opened manually between plan and apply for spec
       pre-review), write the finalize.md receipt, and post a
       code-reviewer onboarding comment on the PR.
 
-      Prerequisites for Pattern A:
+      Prerequisites for the git-side closeout:
       - You are on a feature branch in the main checkout (apply
         step 0 should have recommended this — check `git branch
         --show-current`).
       - The feature branch is NOT the integration branch (main /
-        master); if it is, skip Pattern A and use the escape hatch
-        at the bottom of this instruction.
+        master); if it is, skip the git-side closeout and use the
+        escape hatch at the bottom of this instruction.
       - A PR for this feature branch already exists on the remote
         (you opened it manually between plan and apply).
       - Apply ran in a worktree at `.worktrees/<change-name>/` with
@@ -288,7 +288,7 @@ artifacts:
       below and invoke `superpowers:finishing-a-development-branch`
       manually — see "Escape hatch" at the bottom.
 
-      Pattern A execution steps:
+      Git-side closeout execution steps:
 
       1. Compute paths and discover branch names:
 
@@ -356,7 +356,7 @@ artifacts:
 
       8. Write finalize.md per templates/finalize.md to
          openspec/changes/<change-name>/finalize.md. Required values
-         for Pattern A:
+         for the git-side closeout:
          - Outcome: `pr-updated`
          - Branch: <feature-branch>
          - Base branch: <integration branch, typically `main`>
@@ -400,8 +400,9 @@ artifacts:
       Assumption: the human who pre-reviewed the proposal/specs
       (logic review) may not be the same human who reviews the code.
       This subroutine posts a single PR comment to orient the code
-      reviewer. It is invoked from Pattern A (step 11) AND from the
-      escape hatch (step 3 of the escape-hatch instructions below)
+      reviewer. It is invoked from the git-side closeout (step 11)
+      AND from the escape hatch (step 3 of the escape-hatch
+      instructions below)
       so that any PR present at finalize completion gets a comment.
 
       Subroutine body:
@@ -521,9 +522,9 @@ artifacts:
       Escape hatch: manual skill invocation
       ------------------------------------------------------------
 
-      If your workflow does not match Pattern A — solo / local-only
-      (skill Option 1 merge-locally to main); brand-new PR via the
-      skill (Option 2); keep the worktree alive for iteration
+      If your workflow does not match the git-side closeout — solo /
+      local-only (skill Option 1 merge-locally to main); brand-new PR
+      via the skill (Option 2); keep the worktree alive for iteration
       (Option 3); or discard the work (Option 4) — invoke
       `superpowers:finishing-a-development-branch` directly via
       the Skill tool and pick the matching option.
@@ -538,11 +539,11 @@ artifacts:
       3. Run the comment-posting subroutine above regardless of
          which option ran. It self-skips when no PR exists
          (Options 1, 3, 4) and posts/edits when a PR exists
-         (Option 2 or an earlier Pattern A run left one).
+         (Option 2 or an earlier git-side closeout run left one).
 
       This step 3 is the explicit guarantee that the code-reviewer
       comment exists on any PR that exists at finalize completion,
-      even outside the Pattern A automation.
+      even outside the canonical automation.
 
       Once finalize.md exists, the change is git-clean and ready
       for /opsx:archive. See docs/workflow-details.md Phase 6
@@ -587,19 +588,21 @@ apply:
        d. **Branch-state checks** (v4):
           - **Recommended**: a feature branch (any branch that is not
             the project's integration branch — typically `main` or
-            `master`). This is the canonical Pattern A starting state.
-            Finalize's Pattern A flow will merge the worktree back
-            into this branch and push to update the existing PR.
+            `master`). This is the canonical starting state for the
+            git-side closeout. Finalize's git-side closeout will merge
+            the worktree back into this branch and push to update the
+            existing PR.
           - **Tolerated with warning**: on the integration branch.
             Proceed, but warn the user that (1) artifact commits will
-            land on the integration branch and (2) finalize's Pattern A
-            flow will not produce a usable PR because there is no
+            land on the integration branch and (2) finalize's git-side
+            closeout will not produce a usable PR because there is no
             separate feature branch to merge into; the user will need
             to fall back to the manual escape hatch in finalize.
-          - **Detached HEAD**: warn the user that finalize's Pattern A
-            flow will be skipped (no branch to merge into), and the
-            user will need to use the escape hatch. Proceed with apply
-            on the detached HEAD; the worktree will still be created.
+          - **Detached HEAD**: warn the user that finalize's git-side
+            closeout will be skipped (no branch to merge into), and
+            the user will need to use the escape hatch. Proceed with
+            apply on the detached HEAD; the worktree will still be
+            created.
 
     1. **Workspace**: Use the Skill tool to invoke
        **superpowers:using-git-worktrees** to create an isolated
@@ -669,11 +672,11 @@ apply:
 
        Convergence loop — react to the verify outcome:
        - PASS or PASS_WITH_WARNINGS → proceed via /opsx:continue to the
-         finalize artifact, which executes Pattern A directly (merge
-         worktree → feature branch, push to update PR, post
-         code-reviewer comment) and writes finalize.md. The skill
+         finalize artifact, which executes the git-side closeout
+         directly (merge worktree → feature branch, push to update PR,
+         post code-reviewer comment) and writes finalize.md. The skill
          superpowers:finishing-a-development-branch is retained as a
-         manual escape hatch for non-Pattern-A flows. /opsx:archive
+         manual escape hatch for non-canonical flows. /opsx:archive
          runs once finalize.md exists.
        - FAIL with code-fixable items → return to step 2 (Executor),
          re-run with the same iteration mechanics (apply.md is

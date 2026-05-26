@@ -16,7 +16,7 @@ Use it as the long-form companion to the [workflow overview](workflow.md), [top-
 | | 6 | `plan` | Make the work executable. | Superpowers: `writing-plans` |
 | **3. Code Implementation** | 7 | `apply` | Change the system. | Superpowers: `using-git-worktrees`, `subagent-driven-development`, `test-driven-development`, `requesting-code-review` |
 | **4. Spec Validation** | 8 | `verify` | Prove it matches intent. | OpenSpec: `/opsx:verify` |
-| **5. Finalization** | 9 | `finalize` | Close out the git side cleanly before archive. | Schema-executed Pattern A (v4); `finishing-a-development-branch` is escape hatch |
+| **5. Finalization** | 9 | `finalize` | Close out the git side cleanly before archive. | Schema-executed git-side closeout (v4); `finishing-a-development-branch` is escape hatch |
 | **6. Archival** | 10 | `archive` boundary | Sync deltas and freeze the change. | OpenSpec: `/opsx:archive` |
 
 Read top-to-bottom for the full lifecycle, or jump to any step.
@@ -188,7 +188,7 @@ The Code Implementation phase produces the actual code for the change, executed 
    - **`requesting-code-review`** — after each task, a code-reviewer subagent checks spec compliance and code quality. A final review runs over the whole implementation before apply concludes.
    - As coarse tasks complete, `tasks.md` checkboxes flip to `- [x]`.
 3. **Receipt** — at the end of the phase, a minimal `apply.md` is written per `openspec/schemas/superspec/templates/apply.md`: iteration counter, applied-at timestamp, executor identity, worktree path, branch, commit range, and tasks completed X of Y. This is the v2 DAG artifact that gates `verify`. If `apply.md` already exists, the iteration counter is incremented.
-4. **Phase 5 closeout** — Pattern A (schema-executed in v4) handles the git-side closeout; covered in Phase 5 / Step 9 below. The skill `finishing-a-development-branch` is retained as a manual escape hatch only.
+4. **Phase 5 closeout** — the git-side closeout (schema-executed in v4) handles the wrap-up; covered in Phase 5 / Step 9 below. The skill `finishing-a-development-branch` is retained as a manual escape hatch only.
 
 **Pre-flight requirement.** Before creating the worktree, the change directory `openspec/changes/<name>/` must already be committed on the current branch. Otherwise, when the worktree merges back, git will refuse with "untracked files would be overwritten by merge."
 
@@ -264,19 +264,19 @@ If any check fails, the agent returns to the offending artifact, fixes it, and r
 
 ## Phase 5: Finalization
 
-The Finalization phase performs the git-side closeout for the change — merging the implementation worktree branch back into the user's feature branch, pushing the feature branch to update the existing PR, writing the finalize receipt, and posting a single code-reviewer onboarding comment on the PR. Schema v4 introduced **Pattern A** as the canonical finalize flow, executed directly by the schema instruction.
+The Finalization phase performs the git-side closeout for the change — merging the implementation worktree branch back into the user's feature branch, pushing the feature branch to update the existing PR, writing the finalize receipt, and posting a single code-reviewer onboarding comment on the PR. Schema v4 introduced **the git-side closeout** as the canonical finalize flow, executed directly by the schema instruction.
 
 It contains a single step.
 
-### Step 9. Finalize — `finalize` (Pattern A)
+### Step 9. Finalize — `finalize` (the git-side closeout)
 
 > Closes out the development branch in git terms; writes the finalize.md receipt; updates the existing PR; posts a code-reviewer onboarding comment.
 
 **Brief why:** Restore the documented golden path — a single PR on the user's feature branch that carries logic pre-review, implementation, finalize, and archive commits in one reviewable diff before merge.
 
-**Why it's required.** Before v4, the post-verify closeout invoked `superpowers:finishing-a-development-branch` and let its 4-option menu drive things. In practice this produced two failure modes (finalize.md off the PR branch; two related branches on remote — the user's feature branch with the pre-review PR sat orphaned while the skill opened a new PR from the worktree branch). v4 fixes this by having the schema execute Pattern A directly so the canonical flow is deterministic and matches the documented golden path.
+**Why it's required.** Before v4, the post-verify closeout invoked `superpowers:finishing-a-development-branch` and let its 4-option menu drive things. In practice this produced two failure modes (finalize.md off the PR branch; two related branches on remote — the user's feature branch with the pre-review PR sat orphaned while the skill opened a new PR from the worktree branch). v4 fixes this by having the schema execute the git-side closeout directly so the canonical flow is deterministic and matches the documented golden path.
 
-**What the step does.** `/opsx:continue` advances to the finalize artifact, whose v4 instruction executes the Pattern A sequence:
+**What the step does.** `/opsx:continue` advances to the finalize artifact, whose v4 instruction executes the git-side closeout sequence:
 
 1. Detect the worktree path, the worktree branch (`<change-name>`), and the feature branch.
 2. Verify tests pass in the worktree.
@@ -292,7 +292,7 @@ It contains a single step.
 
 The PR comment uses a marker (`<!-- superspec:finalize-comment -->`) to support idempotent upsert — re-running finalize edits the existing comment rather than duplicating it. The body is **paraphrased by the agent** from `proposal.md`, `tasks.md`, `apply.md`, `verify.md`, and (if present) `retrospective.md`. Verbatim copy from the source artifacts is forbidden. Target length 200–400 words, hard ceiling 600 words.
 
-**Prerequisites for Pattern A.** The schema instruction checks all of these and skips Pattern A (directing the user to the escape hatch) if any is unmet:
+**Prerequisites for the git-side closeout.** The schema instruction checks all of these and skips the git-side closeout (directing the user to the escape hatch) if any is unmet:
 
 - Currently on a feature branch in the main checkout (not the integration branch, not detached HEAD).
 - A PR for the feature branch exists on the remote (`gh pr view <feature-branch>` returns a number).
@@ -300,18 +300,18 @@ The PR comment uses a marker (`<!-- superspec:finalize-comment -->`) to support 
 
 **Source phase used.** Schema-owned. Two narrow pieces are borrowed from `superpowers:finishing-a-development-branch` (Step 5 Option 1 merge structure + Step 6 worktree-cleanup provenance guard) with attribution and a recreation method — see the dedicated subsection below in the Superpowers skill index.
 
-**Step not used / replaced and why.** v3 invoked `superpowers:finishing-a-development-branch` directly and used its 4-option menu. That menu doesn't fit Superspec's PR-pre-review workflow: its Option 2 creates a new PR from the worktree branch (leaving the user's feature branch orphaned), and its Option 1 merges into the integration branch (not the feature branch). v4 demotes the skill to a manual escape hatch for non-Pattern-A flows.
+**Step not used / replaced and why.** v3 invoked `superpowers:finishing-a-development-branch` directly and used its 4-option menu. That menu doesn't fit Superspec's PR-pre-review workflow: its Option 2 creates a new PR from the worktree branch (leaving the user's feature branch orphaned), and its Option 1 merges into the integration branch (not the feature branch). v4 demotes the skill to a manual escape hatch for non-canonical flows.
 
 #### Escape hatch (manual skill invocation)
 
-If your workflow doesn't match Pattern A, invoke `superpowers:finishing-a-development-branch` directly via the Skill tool and pick the option that matches your situation:
+If your workflow doesn't match the git-side closeout, invoke `superpowers:finishing-a-development-branch` directly via the Skill tool and pick the option that matches your situation:
 
 - **Option 1 (Merge locally)** — solo / local-only; merges into the integration branch and removes the worktree.
 - **Option 2 (Push and create PR)** — brand-new PR via the skill (rare in the canonical Superspec workflow; only useful if you skipped the manual pre-review PR open between plan and apply).
 - **Option 3 (Keep as-is)** — keep the worktree alive for iteration on PR feedback.
 - **Option 4 (Discard)** — force-delete the work with the skill's typed-confirmation gate.
 
-After the skill returns, hand-write `finalize.md` from `templates/finalize.md` picking the matching Outcome (`merge-locally`, `pr-created`, `kept-as-is`, `discarded`), commit it on the appropriate branch, and **always run the comment-posting subroutine** (defined in the finalize instruction). The subroutine self-skips when no PR exists (Options 1, 3, 4) and posts/edits the orientation comment when a PR exists (Option 2 or a previously opened PR). This step is the explicit guarantee that the code-reviewer comment exists on any PR present at finalize completion, even outside the Pattern A automation.
+After the skill returns, hand-write `finalize.md` from `templates/finalize.md` picking the matching Outcome (`merge-locally`, `pr-created`, `kept-as-is`, `discarded`), commit it on the appropriate branch, and **always run the comment-posting subroutine** (defined in the finalize instruction). The subroutine self-skips when no PR exists (Options 1, 3, 4) and posts/edits the orientation comment when a PR exists (Option 2 or a previously opened PR). This step is the explicit guarantee that the code-reviewer comment exists on any PR present at finalize completion, even outside the canonical automation.
 
 #### Recommended (non-blocking)
 
@@ -341,10 +341,10 @@ The Archival phase syncs the change's delta specs into the living spec tree and 
 
 ```text
 1. verify completes (verify.md committed on feature branch in the worktree)
-2. finalize (Pattern A — schema merges worktree → feature branch, pushes
-   to update existing PR, posts code-reviewer onboarding comment;
-   finalize.md records Outcome: pr-updated, Final state: pr-updated;
-   worktree is removed during finalize)
+2. finalize (the git-side closeout — schema merges worktree → feature
+   branch, pushes to update existing PR, posts code-reviewer onboarding
+   comment; finalize.md records Outcome: pr-updated, Final state:
+   pr-updated; worktree is removed during finalize)
 3. [PAUSE: human code review on the PR; reviewer approves]
 4. /opsx:archive on the feature branch (syncs delta specs, moves change
    dir; new commits land on the feature branch)
@@ -354,11 +354,11 @@ The Archival phase syncs the change's delta specs into the living spec tree and 
 
 The archive-before-merge ordering keeps the PR's diff complete: every commit that went into the change (implementation, finalize.md, archive sync) is in the PR. If the PR is merged before archive runs, the archive commits would have to be authored on the integration branch after the fact — recoverable but loses the unified audit trail.
 
-Note: v3's step 7 ("Local worktree cleanup if still present") is no longer needed in Pattern A because the worktree is removed during finalize itself. Users falling back to the escape hatch with Option 3 (keep-as-is) or Option 2 (skill-created PR) may still need to clean up manually; see the local-merge variant below.
+Note: v3's step 7 ("Local worktree cleanup if still present") is no longer needed in the git-side closeout because the worktree is removed during finalize itself. Users falling back to the escape hatch with Option 3 (keep-as-is) or Option 2 (skill-created PR) may still need to clean up manually; see the local-merge variant below.
 
 #### Local-merge variant (escape hatch, acceptable for solo / local-only changes)
 
-If the user falls back to the escape hatch and picks the skill's Option 1 (Merge locally), the skill performs the merge into the integration branch inline and removes the worktree. `/opsx:archive` then runs on the integration branch directly. This inverts the archive/merge order vs. the canonical Pattern A path. Acceptable for solo or local-only changes where the PR audit trail isn't relevant.
+If the user falls back to the escape hatch and picks the skill's Option 1 (Merge locally), the skill performs the merge into the integration branch inline and removes the worktree. `/opsx:archive` then runs on the integration branch directly. This inverts the archive/merge order vs. the canonical git-side closeout path. Acceptable for solo or local-only changes where the PR audit trail isn't relevant.
 
 **Source phase used.** OpenSpec `/opsx:archive` (or `openspec archive`).
 
@@ -393,11 +393,11 @@ If a Superpowers skill is unavailable (not installed, version mismatch), each ar
 | 1 — `brainstorm` | `superpowers:brainstorming` | Write `brainstorm.md` directly. |
 | 6 — `plan` | `superpowers:writing-plans` | Write `plan.md` directly. |
 | 7 — `apply` (subagents unavailable) | `superpowers:subagent-driven-development` | Use `superpowers:executing-plans`, or run tasks manually. Either path requires you to maintain TDD discipline and invoke `superpowers:requesting-code-review` yourself — neither is activated transitively when the subagent path is bypassed. |
-| 9 — `finalize` | Pattern A (schema-executed; the schema instruction is the executor) | Manual fallback only if the schema instruction itself is unavailable (extremely rare) — invoke `superpowers:finishing-a-development-branch` directly, then hand-write `finalize.md`, then run the comment-posting subroutine. |
+| 9 — `finalize` | the git-side closeout (schema-executed; the schema instruction is the executor) | Manual fallback only if the schema instruction itself is unavailable (extremely rare) — invoke `superpowers:finishing-a-development-branch` directly, then hand-write `finalize.md`, then run the comment-posting subroutine. |
 
 ### Borrowed logic and recreation method
 
-Schema v4 owns Pattern A's execution but borrows two narrow pieces of logic from `superpowers:finishing-a-development-branch`:
+Schema v4 owns the git-side closeout's execution but borrows two narrow pieces of logic from `superpowers:finishing-a-development-branch`:
 
 1. **Worktree-cleanup provenance guard** — only remove a worktree if its path is under `.worktrees/`, `worktrees/`, or `~/.config/superpowers/worktrees/`. Otherwise the harness owns the workspace and we leave it in place.
 2. **Structural pattern** — test-verify in worktree → merge → test-verify on merged result → cleanup → delete branch. Taken from the skill's Step 5 Option 1.

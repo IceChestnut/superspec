@@ -1,4 +1,4 @@
-# Rewrite finalize to Merge Worktree Back and Update Existing PR (Pattern A)
+# Rewrite finalize to Merge Worktree Back and Update Existing PR (the git-side closeout)
 
 **Date:** 2026-05-26
 **Schema:** `superspec`
@@ -25,7 +25,7 @@ Step 0 treats "start on integration branch" as canonical and "start on a feature
 
 - Restore the Phase 6 golden path: a single PR on the user's feature branch, opened during phases 1-6 for logic pre-review and updated through finalize and archive, containing every commit in the change.
 - Make the canonical Superspec finalize flow execute deterministically via `/opsx:continue` with no copy-paste reconciliation.
-- Demote `superpowers:finishing-a-development-branch` from "the finalize executor" to "an escape hatch users can invoke manually when their flow doesn't match Pattern A."
+- Demote `superpowers:finishing-a-development-branch` from "the finalize executor" to "an escape hatch users can invoke manually when their flow doesn't match the git-side closeout."
 - Update `apply` step 0 wording to recommend a user-created feature branch as the canonical starting state.
 - Document the logic borrowed from the upstream skill with explicit attribution and a recreation method, so the schema can be re-aligned with upstream if the skill changes.
 - Update all docs, the SVG flowchart, INTEGRATION.md, and templates to reflect the new flow.
@@ -36,11 +36,11 @@ Step 0 treats "start on integration branch" as canonical and "start on a feature
 - Automating the `git push` + `gh pr create` step the user runs manually between plan and apply. (User decision: stays manual to minimize friction.)
 - Detecting "no PR exists when finalize runs" and falling back to creating one. The schema documents the expected workflow; users who deviate handle reconciliation themselves.
 - Modifying any upstream Superpowers skill.
-- Supporting non-Pattern-A flows through the schema's auto-executed path. Users with different flows invoke the skill manually (escape hatch).
+- Supporting non-canonical flows through the schema's auto-executed path. Users with different flows invoke the skill manually (escape hatch).
 - Modifying `/opsx:archive` behavior. Archive remains spec-side only and unchanged from v3.
 - Promoting `retrospective.md` to a DAG artifact. It stays as a recommendation in finalize's instruction.
 
-## Pattern A definition
+## Git-side closeout definition
 
 The workflow the schema commits to executing automatically:
 
@@ -56,16 +56,16 @@ The workflow the schema commits to executing automatically:
 | `/opsx:archive` | feature branch in main checkout | delta sync + change-dir move; push to update PR |
 | PR merge | GitHub | squash-merge into main; branch deleted |
 
-Two key invariants Pattern A guarantees:
+Two key invariants the git-side closeout guarantees:
 
 - **One remote feature-related branch** (the user's feature branch). The worktree branch is local-only and is consumed at finalize time.
 - **One PR carries everything.** Logic-review commits + implementation commits + finalize.md + archive commits are all in the same PR's diff before merge.
 
 ## Design
 
-### Finalize artifact: schema executes Pattern A directly
+### Finalize artifact: schema executes the git-side closeout directly
 
-The finalize instruction owns the full Pattern A sequence. Concretely the agent executes (paraphrased; final wording in the schema diff below):
+The finalize instruction owns the full git-side closeout sequence. Concretely the agent executes (paraphrased; final wording in the schema diff below):
 
 1. Detect the worktree path and worktree branch name from `git worktree list`. Detect the feature branch (the branch the main checkout is on, or — more robustly — the branch the worktree was created from).
 2. From the worktree, run the project test command. Stop on failure.
@@ -85,7 +85,7 @@ Assumption: the human who pre-reviewed the proposal/specs (logic review) may not
 
 **Single comment-posting subroutine, invoked from both flows.** The comment logic is defined once and invoked from two places:
 
-- **Pattern A path (canonical)**: invoked as step 11, after the push in step 10 completes.
+- **Canonical git-side closeout path**: invoked as step 11, after the push in step 10 completes.
 - **Escape-hatch path**: the finalize instruction's escape-hatch paragraph explicitly tells the user, after their manual skill invocation returns and they have hand-written finalize.md, to run the comment subroutine if a PR was created or already exists for the branch. (Applies to skill Option 2 — push and create PR. Options 1, 3, 4 have no PR and the subroutine is skipped.)
 
 This guarantees that any path through finalize that leaves a PR on the remote also leaves a code-reviewer comment on that PR.
@@ -103,7 +103,7 @@ If `PR_NUMBER` is empty, skip the subroutine and record `PR comment: skipped (no
 - If found → edit in place (`gh api -X PATCH repos/<owner>/<repo>/issues/comments/<COMMENT_ID> -f body=@-`). Records `PR comment: edited-existing`.
 - If not found → post a new comment (`gh pr comment <PR_NUMBER> --body-file -`). Records `PR comment: posted`.
 
-This keeps the PR conversation clean if finalize is re-entered (iteration loops, manual re-runs, or moving from escape-hatch Option 2 to a later Pattern A re-run).
+This keeps the PR conversation clean if finalize is re-entered (iteration loops, manual re-runs, or moving from escape-hatch Option 2 to a later canonical git-side closeout re-run).
 
 **Comment body — explicitly a summary, not copy-paste.** The placeholders below are **bullet-pointed targets the agent must summarize in its own words**. The agent MUST NOT copy verbatim from `proposal.md`, `specs/*/spec.md`, `design.md`, or `retrospective.md`. The intent is a short orienting brief, not a duplicate of the artifacts (which the reviewer can read in full at the linked paths). Total target length: **200–400 words**, hard ceiling 600 words. If a summary would exceed the ceiling, prefer cutting detail over truncating mid-sentence.
 
@@ -152,10 +152,10 @@ The Implementation summary section is the only one where values are **extracted 
 
 ### Escape hatch: manual skill invocation
 
-The finalize instruction's closing paragraph names `superpowers:finishing-a-development-branch` as the manual fallback for situations Pattern A doesn't cover:
+The finalize instruction's closing paragraph names `superpowers:finishing-a-development-branch` as the manual fallback for situations the git-side closeout doesn't cover:
 
 - Solo / no-PR workflow → skill's Option 1 (merge locally to main).
-- Push and create PR (rare in Pattern A's expected flow but possible) → skill's Option 2.
+- Push and create PR (rare in the git-side closeout's expected flow but possible) → skill's Option 2.
 - Iteration with worktree preserved → skill's Option 3 (keep as-is).
 - Discard → skill's Option 4 (force-delete with typed confirmation).
 
@@ -163,17 +163,17 @@ The schema does not execute these paths itself. The instruction tells the user t
 
 1. Invoke the skill via the Skill tool and pick the option.
 2. Once the skill returns, hand-write `finalize.md` from `templates/finalize.md`.
-3. **Run the comment-posting subroutine** (defined above) regardless of which option ran. The subroutine self-skips when no PR exists (Options 1, 3, 4) and posts/edits the orientation comment when a PR is present (Option 2 created one; an earlier Pattern A or manual push may also have left one).
+3. **Run the comment-posting subroutine** (defined above) regardless of which option ran. The subroutine self-skips when no PR exists (Options 1, 3, 4) and posts/edits the orientation comment when a PR is present (Option 2 created one; an earlier git-side closeout or manual push may also have left one).
 
-Step 3 is the explicit guarantee that the code-reviewer comment exists on any PR that exists at finalize completion, even outside the Pattern A automation.
+Step 3 is the explicit guarantee that the code-reviewer comment exists on any PR that exists at finalize completion, even outside the canonical automation.
 
 ### `apply` step 0 wording flip
 
 Step 0's "Branch-state checks" subsection inverts its emphasis:
 
-- **Recommended**: a feature branch (any branch that isn't the project's integration branch). Canonical Pattern A starting state.
-- **Tolerated with warning**: on the integration branch (`main` / `master`). Proceed, but warn that artifact commits will land on the integration branch and that finalize's Pattern A flow will not produce a usable PR (no separate feature branch to merge into).
-- **Detached HEAD**: warn; finalize's Pattern A flow is skipped because there is no feature branch to merge into. The user falls back to the manual escape hatch.
+- **Recommended**: a feature branch (any branch that isn't the project's integration branch). Canonical starting state for the git-side closeout.
+- **Tolerated with warning**: on the integration branch (`main` / `master`). Proceed, but warn that artifact commits will land on the integration branch and that finalize's git-side closeout will not produce a usable PR (no separate feature branch to merge into).
+- **Detached HEAD**: warn; finalize's git-side closeout is skipped because there is no feature branch to merge into. The user falls back to the manual escape hatch.
 
 ### Borrowed-logic discipline
 
@@ -201,11 +201,12 @@ name: SuperSpec
 version: 4                # was 3
 description: >
   ... existing description ...
-  v4: finalize's instruction is rewritten to execute Pattern A directly
-  (merge the implementation worktree branch back into the user's feature
-  branch locally, push the feature branch to update the existing PR)
-  rather than invoking superpowers:finishing-a-development-branch. The
-  skill is retained as a manual escape hatch for non-Pattern-A flows.
+  v4: finalize's instruction is rewritten to execute the git-side
+  closeout directly (merge the implementation worktree branch back into
+  the user's feature branch locally, push the feature branch to update
+  the existing PR) rather than invoking
+  superpowers:finishing-a-development-branch. The skill is retained as
+  a manual escape hatch for non-canonical flows.
   apply step 0 wording is also updated to recommend a user-created
   feature branch as the canonical starting state (previously the
   schema recommended starting on the integration branch).
@@ -222,10 +223,10 @@ artifacts:
 
   - id: finalize
     generates: finalize.md
-    description: Pattern A git-side closeout — merge worktree back into feature branch and update PR
+    description: Git-side closeout — merge worktree back into feature branch and update PR
     template: finalize.md
     instruction: |
-      <full Pattern A sequence — see "Design > Finalize artifact" above,
+      <full git-side closeout sequence — see "Design > Finalize artifact" above,
       with inline borrowed-logic annotations and escape-hatch paragraph>
     requires:
       - verify
@@ -244,7 +245,7 @@ apply:
 
 ### `templates/finalize.md`
 
-- Add `pr-updated` as a valid Outcome value (distinct from v3's `pr-created`). `pr-updated` is the Pattern A canonical outcome: an existing PR was updated, not newly created. The other values (`merge-locally`, `kept-as-is`, `discarded`) remain for escape-hatch users.
+- Add `pr-updated` as a valid Outcome value (distinct from v3's `pr-created`). `pr-updated` is the canonical git-side closeout outcome: an existing PR was updated, not newly created. The other values (`merge-locally`, `kept-as-is`, `discarded`) remain for escape-hatch users.
 - Update Final state values to include `pr-updated` alongside the existing set, kept distinct from `pr-open`: `merged` | `pr-open` | `pr-updated` | `kept-open` | `deleted`.
 - Update Next step outcome-specific wording: add `pr-updated` bullet pointing at the archive-then-push-then-merge sequence (same as v3's `pr-created` wording, since the downstream sequence is identical).
 - Add a new field `PR comment status`: `posted` | `edited-existing` | `skipped (no PR)` | `failed: <reason>`. This records whether the code-reviewer onboarding comment landed.
@@ -257,15 +258,15 @@ No content change needed; the convergence-loop reminder already says "PASS → `
 
 | File | What changes |
 |---|---|
-| `openspec/schemas/superspec/schema.yaml` | Version bump 3 → 4. Finalize artifact instruction fully rewritten per Pattern A. Apply step 0 branch-state wording flipped. Description block updated to note v4 changes. |
+| `openspec/schemas/superspec/schema.yaml` | Version bump 3 → 4. Finalize artifact instruction fully rewritten per the git-side closeout. Apply step 0 branch-state wording flipped. Description block updated to note v4 changes. |
 | `openspec/schemas/superspec/templates/finalize.md` | Add `pr-updated` Outcome and update Next step wording. |
-| `openspec/schemas/superspec/INTEGRATION.md` | Section 2 (7 touch-points table): row 7 changes from "Direct (finalize artifact invokes finishing-a-development-branch)" to "Fallback only — schema executes Pattern A directly." Section 4 (walkthrough): rewrite Step 4 (Finalization) to describe Pattern A's auto-executed sequence; mention the escape hatch. Section 6 (design choices): new entry "Why the schema executes Pattern A directly (v4)." New "Migration from v3" subsection. |
-| `openspec/schemas/superspec/README.md` | Workflow overview diagram unchanged (still 10 steps). Differences table: update finalize row. Decision log: add "Why we own Pattern A's logic instead of calling the skill (v4)." |
-| `docs/workflow.md` | Phase 5 (Finalization) summary subsection: replace the "invoke finishing-a-development-branch" line with "schema executes Pattern A: merge worktree back, push to update PR." |
-| `docs/workflow-details.md` | Phase 5 (Finalization) section: full rewrite. Document the Pattern A sequence as the canonical flow; document the manual escape hatch; document the code-reviewer onboarding comment (what it contains, why it exists, marker-based idempotency). Add a "Pattern A workflow" framing that complements the existing "Canonical PR-review golden path" in Phase 6. Phase 6 golden path: update step 2 ("finalize") to reflect Pattern A's merge-back-and-push-and-comment behavior instead of skill-creates-PR behavior. Step 7 (worktree cleanup) becomes unnecessary in Pattern A (cleanup happens during finalize) — note this. Add a new "Borrowed logic and recreation method" subsection in the Superpowers skill index. |
+| `openspec/schemas/superspec/INTEGRATION.md` | Section 2 (7 touch-points table): row 7 changes from "Direct (finalize artifact invokes finishing-a-development-branch)" to "Fallback only — schema executes the git-side closeout directly." Section 4 (walkthrough): rewrite Step 4 (Finalization) to describe the git-side closeout's auto-executed sequence; mention the escape hatch. Section 6 (design choices): new entry "Why the schema executes the git-side closeout directly (v4)." New "Migration from v3" subsection. |
+| `openspec/schemas/superspec/README.md` | Workflow overview diagram unchanged (still 10 steps). Differences table: update finalize row. Decision log: add "Why we own the git-side closeout's logic instead of calling the skill (v4)." |
+| `docs/workflow.md` | Phase 5 (Finalization) summary subsection: replace the "invoke finishing-a-development-branch" line with "schema executes the git-side closeout: merge worktree back, push to update PR." |
+| `docs/workflow-details.md` | Phase 5 (Finalization) section: full rewrite. Document the git-side closeout sequence as the canonical flow; document the manual escape hatch; document the code-reviewer onboarding comment (what it contains, why it exists, marker-based idempotency). Add a "git-side closeout workflow" framing that complements the existing "Canonical PR-review golden path" in Phase 6. Phase 6 golden path: update step 2 ("finalize") to reflect the git-side closeout's merge-back-and-push-and-comment behavior instead of skill-creates-PR behavior. Step 7 (worktree cleanup) becomes unnecessary in the git-side closeout (cleanup happens during finalize) — note this. Add a new "Borrowed logic and recreation method" subsection in the Superpowers skill index. |
 | `docs/workflow-mermaid.md` | If the mermaid diagram mentions skill invocation for finalize, update the label. |
 | `docs/project-layout.md` | No structural change; finalize.md is already documented. Verify wording for accuracy if it mentions the skill. |
-| `docs/assets/superspec-phases-flowchart.svg` | Regenerate. If Phase 5 block currently labels the skill as the executor, update to reflect schema-owned Pattern A. (Recent commit 8dce140 regenerated for v3; this regen replaces that one.) |
+| `docs/assets/superspec-phases-flowchart.svg` | Regenerate. If Phase 5 block currently labels the skill as the executor, update to reflect the schema-owned git-side closeout. (Recent commit 8dce140 regenerated for v3; this regen replaces that one.) |
 | `README.md` (root) | Tagline: bump to schema v4 if the README mentions schema version. Quick Start section: update the description of `/opsx:continue` to mention "merge worktree back, update PR" instead of "invoke finishing-a-development-branch." |
 
 ## Testing
@@ -274,9 +275,9 @@ No content change needed; the convergence-loop reminder already says "PASS → `
 - Hand-walk `version == 4`, artifact list unchanged from v3 in shape (`[brainstorm, proposal, design, specs, tasks, plan, apply, verify, finalize]`), finalize.requires still `[verify]`.
 - Doc-DAG consistency: grep every mention of "finishing-a-development-branch" across the repo. Each occurrence must either (a) describe the escape hatch correctly or (b) reference the borrowed logic with attribution. No bare "the schema invokes finishing-a-development-branch" lines should survive.
 - Template-instruction alignment: finalize's instruction references `pr-updated`; templates/finalize.md must list `pr-updated` as a valid Outcome.
-- Manual integration test: in a test project, run the full Pattern A flow against this schema. Confirm: only one feature branch on remote, PR contains finalize.md before the second-round code review begins, archive runs on the same branch, single merge closes the PR.
+- Manual integration test: in a test project, run the git-side closeout end-to-end against this schema. Confirm: only one feature branch on remote, PR contains finalize.md before the second-round code review begins, archive runs on the same branch, single merge closes the PR.
 - Manual escape-hatch test: in a test project, deliberately skip the manual PR-open step and run `/opsx:continue`. Confirm: the instruction's escape-hatch paragraph triggers, the user can invoke the skill manually, and writing finalize.md by hand from the template works.
-- Manual code-reviewer-comment test (Pattern A): run Pattern A end-to-end. Confirm a single PR comment appears with the marker, the reading-order list, and the fallback wording for any artifact that wasn't present (e.g., no design.md, no retrospective.md). Re-run finalize against the same PR; confirm the existing comment is **edited in place**, not duplicated.
+- Manual code-reviewer-comment test (canonical git-side closeout): run the git-side closeout end-to-end. Confirm a single PR comment appears with the marker, the reading-order list, and the fallback wording for any artifact that wasn't present (e.g., no design.md, no retrospective.md). Re-run finalize against the same PR; confirm the existing comment is **edited in place**, not duplicated.
 - Comment test (escape-hatch Option 2): run finalize via the escape hatch, picking the skill's Option 2 to create a new PR. After the skill returns, hand-write finalize.md, then run the comment subroutine per step 3 of the escape-hatch instructions. Confirm the same orientation comment lands on the just-created PR.
 - Comment test (escape-hatch Options 1/3/4): repeat with each of the no-PR options. Confirm the comment subroutine self-skips and finalize.md records `PR comment: skipped (no PR)`.
 - Summarization test: prepare a change with a long, verbose proposal.md and retrospective.md. Run finalize. Confirm the resulting comment is 200–400 words, in the agent's own paraphrased language, and does **not** contain copy-pasted sentences from the source artifacts (spot-check by grepping for distinctive phrases from the source).
@@ -286,37 +287,37 @@ No content change needed; the convergence-loop reminder already says "PASS → `
 
 - **Fast-forward merge fails in step 4** (feature branch diverged after worktree creation). Stop with a clear error. User reconciles manually (rebase, etc.). This is an uncommon corner — typically the feature branch is untouched while apply runs in the worktree.
 - **Tests pass in worktree (step 2) but fail on merged result (step 5).** Stop. Worktree branch contains the failing state; user investigates. The worktree is still on disk for forensics until they re-run finalize.
-- **`gh pr view` returns no PR for the feature branch.** Pattern A's prerequisite was missed (user skipped the manual `gh pr create`). Schema instruction tells the agent to alert the user and either (a) run `gh pr create` themselves and re-enter finalize, or (b) fall back to the manual escape hatch.
+- **`gh pr view` returns no PR for the feature branch.** A prerequisite of the git-side closeout was missed (user skipped the manual `gh pr create`). Schema instruction tells the agent to alert the user and either (a) run `gh pr create` themselves and re-enter finalize, or (b) fall back to the manual escape hatch.
 - **Worktree path is harness-owned** (not under `.worktrees/`/`worktrees/`/`~/.config/superpowers/worktrees/`). Provenance guard skips removal. Finalize completes; user removes the worktree manually via their harness.
-- **User on detached HEAD when running `/opsx:continue`.** Apply step 0 already warned about this. Pattern A is skipped; user uses the escape hatch.
-- **User started apply on the integration branch.** Apply step 0 warned about this. Pattern A's merge-back step would try to merge into main, which is nominally possible but not the workflow Superspec is documenting. Finalize soft-fails: warn the user that Pattern A isn't appropriate, point them at the escape hatch, and let them choose.
-- **PR comment cannot be posted** (gh unavailable, draft PR with comments disabled, network/auth failure, rate limit). Pattern A continues; finalize.md records `PR comment: failed — <reason>`. The merge, push, and finalize.md write are not rolled back. Optionally, a follow-up `/opsx:continue` could re-attempt the comment once the underlying issue is fixed.
+- **User on detached HEAD when running `/opsx:continue`.** Apply step 0 already warned about this. The git-side closeout is skipped; user uses the escape hatch.
+- **User started apply on the integration branch.** Apply step 0 warned about this. The git-side closeout's merge-back step would try to merge into main, which is nominally possible but not the workflow Superspec is documenting. Finalize soft-fails: warn the user that the git-side closeout isn't appropriate, point them at the escape hatch, and let them choose.
+- **PR comment cannot be posted** (gh unavailable, draft PR with comments disabled, network/auth failure, rate limit). The git-side closeout continues; finalize.md records `PR comment: failed — <reason>`. The merge, push, and finalize.md write are not rolled back. Optionally, a follow-up `/opsx:continue` could re-attempt the comment once the underlying issue is fixed.
 - **PR comment marker collides with an existing comment** authored by the user that happens to contain the marker string. Extremely unlikely (the marker is `<!-- superspec:finalize-comment -->`), but if it happens, the agent edits that comment in place. Mitigation is purely "don't author user comments containing that marker."
 
 ## Migration from schema v3
 
-In-flight v3 changes that already have finalize.md will progress through `/opsx:continue` unchanged — the existence of finalize.md is what the walker checks, and Pattern A only kicks in when finalize.md is being generated for the first time.
+In-flight v3 changes that already have finalize.md will progress through `/opsx:continue` unchanged — the existence of finalize.md is what the walker checks, and the git-side closeout only kicks in when finalize.md is being generated for the first time.
 
-For users mid-change-with-no-finalize.md-yet, the v4 schema simply changes what `/opsx:continue` instructs them to do at finalize time. Their feature branch and worktree are unaffected; they get the Pattern A flow on next finalize attempt.
+For users mid-change-with-no-finalize.md-yet, the v4 schema simply changes what `/opsx:continue` instructs them to do at finalize time. Their feature branch and worktree are unaffected; they get the git-side closeout flow on next finalize attempt.
 
 Projects pinned to v3 keep working. v4's changes are confined to the finalize artifact's instruction body, the apply step-0 wording, and the finalize.md template's enumerations. The DAG shape (artifact list, `requires` edges, generates files) is identical to v3.
 
 ## Risks
 
-- **Schema instruction grows in complexity.** Pattern A is ~10 explicit steps with conditional branches (test failures, provenance check, escape-hatch trigger). Mitigation: numbered steps, inline borrowed-logic comments, clear bail-out points. Reviewers should reject PRs that drift the instruction from the documented Pattern A.
+- **Schema instruction grows in complexity.** The git-side closeout is ~10 explicit steps with conditional branches (test failures, provenance check, escape-hatch trigger). Mitigation: numbered steps, inline borrowed-logic comments, clear bail-out points. Reviewers should reject PRs that drift the instruction from the documented git-side closeout.
 - **Borrowed logic drifts from upstream.** Mitigation: the inline attribution comments include the upstream commit SHA at port time. A subsection in workflow-details.md restates the discipline and recommends re-checking on every upstream Superpowers minor version bump. No automation; this is discipline-by-convention.
-- **Users skip the manual PR-open step.** Pattern A breaks (step 10's push has no PR to update). Mitigation: the schema instruction detects "no PR for this feature branch" at step 8 and falls back to the escape hatch with a clear message. Documented as an edge case above. Non-blocking on the schema side.
+- **Users skip the manual PR-open step.** The git-side closeout breaks (step 10's push has no PR to update). Mitigation: the schema instruction detects "no PR for this feature branch" at step 8 and falls back to the escape hatch with a clear message. Documented as an edge case above. Non-blocking on the schema side.
 - **The skill upstream renames Step 5 / Step 6 / Option 1.** The inline attribution comments still point at the upstream URL; the SHA captures the pin. Even if structure changes, the borrowed *logic* (test-verify → merge → cleanup with provenance guard) is the artifact that needs re-evaluation, not the section numbering. The recreation method covers this.
-- **Pattern A doesn't fit every team's GitFlow.** Mitigation: the escape hatch is first-class, not a footnote. Teams that want sequential PRs (Pattern B) or stacked PRs (Pattern C) can invoke the skill manually or build a follow-up schema variant.
+- **The git-side closeout doesn't fit every team's GitFlow.** Mitigation: the escape hatch is first-class, not a footnote. Teams that want sequential PRs (Pattern B) or stacked PRs (Pattern C) can invoke the skill manually or build a follow-up schema variant.
 
 ## Resolved decisions (formerly open)
 
 These were open during brainstorming and now have explicit answers, recorded here for the implementation phase:
 
-- **`Outcome` enum keeps `pr-created` and `pr-updated` distinct.** `pr-created` is the escape-hatch path (skill's Option 2 created a new PR). `pr-updated` is the Pattern A canonical path (existing PR was updated). finalize.md self-documents which flow ran.
+- **`Outcome` enum keeps `pr-created` and `pr-updated` distinct.** `pr-created` is the escape-hatch path (skill's Option 2 created a new PR). `pr-updated` is the canonical git-side closeout path (existing PR was updated). finalize.md self-documents which flow ran.
 - **`Final state` enum keeps `pr-open` and `pr-updated` distinct**, same rationale.
 - **`apply` step 0 soft-fails on the integration branch.** Warn the user, but proceed. Hard-fail would force users to back out and create a branch first, which is more disciplinarian than necessary for a default.
-- **Finalize soft-fails on "feature branch == integration branch".** Warn and direct the user to the escape hatch (manual skill invocation), but do not block. Pattern A is not attempted when there is no separate feature branch to merge into; the warning explains why.
+- **Finalize soft-fails on "feature branch == integration branch".** Warn and direct the user to the escape hatch (manual skill invocation), but do not block. The git-side closeout is not attempted when there is no separate feature branch to merge into; the warning explains why.
 
 ## Open questions
 

@@ -25,7 +25,7 @@ The two are integrated through a custom schema [schema.yaml](./schema.yaml). The
 | 4 | `superpowers:subagent-driven-development` | apply step 2a | Direct |
 | 5 | `superpowers:test-driven-development` | (auto-triggered inside #4) | **Transitive** (SKILL.md L205 / L274) |
 | 6 | `superpowers:requesting-code-review` | (auto-triggered inside #4) | **Transitive** (SKILL.md L270) |
-| 7 | `superpowers:finishing-a-development-branch` | Manual escape hatch only — Pattern A is executed by the schema directly (v4) | **Fallback** |
+| 7 | `superpowers:finishing-a-development-branch` | Manual escape hatch only — the git-side closeout is executed by the schema directly (v4) | **Fallback** |
 
 There is also one **fallback**:
 
@@ -78,7 +78,7 @@ There is also one **fallback**:
     └──────────┘      │
                       ▼
                   ┌──────────┐
-                  │ finalize │ ◄── schema-executed Pattern A (v4)
+                  │ finalize │ ◄── schema-executed git-side closeout (v4)
                   │          │     writes finalize.md + updates PR
                   └──────────┘
                       │
@@ -91,7 +91,7 @@ There is also one **fallback**:
 - `design` is an **optional leaf**. Brainstorm still attempts to pre-populate design.md, but tasks no longer hard-depend on it (`tasks.requires: [specs]`). Per OpenSpec conventions: `design.md` is only written when non-trivial technical decisions need explanation.
 - `apply` is a **real DAG node** as of schema v2. It generates `apply.md` (a minimal receipt — iteration counter, worktree, branch, commit range, task counts) so the DAG can honestly express "verify depends on apply having run." The canonical `/opsx:apply` instruction body still lives in the top-level `apply:` phase block; the apply artifact's own instruction is a short redirect to avoid drift.
 - `verify` requires `apply` (was `plan` in v1). The OpenSpec CLI will refuse to surface verify as a `ready` artifact until `apply.md` exists.
-- `finalize` is a **real DAG node** as of schema v3. It generates `finalize.md` (a minimal git-closeout receipt: outcome, PR URL, final branch state) and requires `verify`. `/opsx:continue` surfaces finalize's instruction after verify completes. As of schema v4 (see §4 Step 4 and §6 Design Choice #6), that instruction executes Pattern A directly (merge worktree → feature branch, push to update PR, post code-reviewer comment); `superpowers:finishing-a-development-branch` is retained as a manual escape hatch only. `/opsx:archive` is the lifecycle close that follows finalize and is not in the DAG (it remains an OpenSpec CLI command).
+- `finalize` is a **real DAG node** as of schema v3. It generates `finalize.md` (a minimal git-closeout receipt: outcome, PR URL, final branch state) and requires `verify`. `/opsx:continue` surfaces finalize's instruction after verify completes. As of schema v4 (see §4 Step 4 and §6 Design Choice #6), that instruction executes the git-side closeout directly (merge worktree → feature branch, push to update PR, post code-reviewer comment); `superpowers:finishing-a-development-branch` is retained as a manual escape hatch only. `/opsx:archive` is the lifecycle close that follows finalize and is not in the DAG (it remains an OpenSpec CLI command).
 - The convergence loop (apply → verify → loop back on code-fixable FAILs, capped at 5 iterations) is documented in `docs/workflow-details.md`. The schema enforces the file-existence dependency; the iteration decision is made by the agent or by a future loop-runner command (not in scope for v2 or v3).
 
 ---
@@ -219,9 +219,9 @@ If any check fails, go back to the corresponding artifact, fix it, and re-run ve
 
 ### Step 4: Finalization
 
-`/opsx:continue` after verify completes surfaces the `finalize` artifact's instruction. As of schema v4, the instruction executes **Pattern A** directly — it does NOT invoke `superpowers:finishing-a-development-branch` in the canonical flow.
+`/opsx:continue` after verify completes surfaces the `finalize` artifact's instruction. As of schema v4, the instruction executes **the git-side closeout** directly — it does NOT invoke `superpowers:finishing-a-development-branch` in the canonical flow.
 
-#### 4-1. Pattern A canonical sequence (executed by the schema)
+#### 4-1. Canonical git-side closeout sequence (executed by the schema)
 
 1. Detect worktree path and worktree branch name; detect the feature branch.
 2. Verify tests pass in the worktree.
@@ -239,7 +239,7 @@ The comment uses a marker (`<!-- superspec:finalize-comment -->`) for idempotent
 
 #### 4-2. Escape hatch (manual skill invocation)
 
-If your workflow doesn't match Pattern A — solo / no-PR, brand-new PR from the skill, keep-as-is, or discard — invoke `superpowers:finishing-a-development-branch` directly via the Skill tool, pick the matching option, hand-write `finalize.md` from `templates/finalize.md`, and then run the comment-posting subroutine (defined in the finalize instruction). The subroutine self-skips when there's no PR and posts/edits the orientation comment when one exists.
+If your workflow doesn't match the git-side closeout — solo / no-PR, brand-new PR from the skill, keep-as-is, or discard — invoke `superpowers:finishing-a-development-branch` directly via the Skill tool, pick the matching option, hand-write `finalize.md` from `templates/finalize.md`, and then run the comment-posting subroutine (defined in the finalize instruction). The subroutine self-skips when there's no PR and posts/edits the orientation comment when one exists.
 
 #### 4-3. Retrospective (recommended, non-blocking)
 
@@ -268,10 +268,10 @@ Behavior:
 
 ```text
 1. verify completes (verify.md committed on feature branch in the worktree)
-2. finalize (Pattern A — schema merges worktree → feature branch, pushes
-   to update the existing PR, posts code-reviewer onboarding comment;
-   finalize.md records Outcome: pr-updated, Final state: pr-updated;
-   worktree is removed during finalize)
+2. finalize (the git-side closeout — schema merges worktree → feature
+   branch, pushes to update the existing PR, posts code-reviewer
+   onboarding comment; finalize.md records Outcome: pr-updated, Final
+   state: pr-updated; worktree is removed during finalize)
 3. [PAUSE: human code review on the PR; reviewer approves]
 4. /opsx:archive on the feature branch (syncs delta specs, moves change
    dir; new commits land on the feature branch)
@@ -279,11 +279,11 @@ Behavior:
 6. PR merge (gh pr merge --squash --delete-branch or GitHub UI)
 ```
 
-The archive-before-merge ordering keeps the PR's diff complete: every commit that went into the change (implementation, finalize.md, archive sync) is in the PR. If the PR is merged before archive runs, the archive commits would have to be authored on main after the fact — recoverable but loses the unified audit trail. Note that step 7 from v3 ("local worktree cleanup if still present") is no longer needed in Pattern A because the worktree is removed during finalize itself.
+The archive-before-merge ordering keeps the PR's diff complete: every commit that went into the change (implementation, finalize.md, archive sync) is in the PR. If the PR is merged before archive runs, the archive commits would have to be authored on main after the fact — recoverable but loses the unified audit trail. Note that step 7 from v3 ("local worktree cleanup if still present") is no longer needed in the git-side closeout because the worktree is removed during finalize itself.
 
 #### Local-merge variant (acceptable for solo / local-only changes)
 
-If the user falls back to the escape hatch and picks the skill's Option 1 (Merge locally), the skill performs the merge into the integration branch inline and removes the worktree. `/opsx:archive` then runs on the integration branch directly. This inverts the archive/merge order vs. the canonical Pattern A path. Acceptable for solo or local-only changes where the PR audit trail isn't relevant.
+If the user falls back to the escape hatch and picks the skill's Option 1 (Merge locally), the skill performs the merge into the integration branch inline and removes the worktree. `/opsx:archive` then runs on the integration branch directly. This inverts the archive/merge order vs. the canonical git-side closeout path. Acceptable for solo or local-only changes where the PR audit trail isn't relevant.
 
 ---
 
@@ -340,9 +340,9 @@ In v3, `finalize` is promoted to a real DAG artifact (`generates: finalize.md`, 
 
 This change also moves the recommended retrospective guidance from the apply: block (where it was misplaced — apply ends with verify, not with archive) into finalize's instruction, where it logically belongs as a pre-archive activity.
 
-**v4 addendum — schema owns Pattern A's logic.**
+**v4 addendum — schema owns the git-side closeout's logic.**
 
-Promoting finalize to an artifact (v3) made the call site discoverable but kept the executor delegated to `superpowers:finishing-a-development-branch`. That skill's 4-option menu doesn't fit Superspec's PR-pre-review workflow: its "Option 2: push and create PR" creates a *new* PR from the worktree branch, leaving the user's pre-existing feature branch (with the artifacts and the open pre-review PR) orphaned, and its Option 1 ("Merge locally") merges into the integration branch instead of the feature branch. In v4, the finalize instruction executes Pattern A directly — merge worktree → feature branch, push to update the existing PR, post a code-reviewer comment — and demotes the skill to a manual escape hatch for non-Pattern-A flows (solo/no-PR, brand-new PR via the skill's Option 2, keep-as-is, discard). The schema borrows two narrow pieces from the skill (worktree-provenance guard, test-verify → merge structural pattern) with explicit attribution and a documented recreation method; everything else lives in the schema.
+Promoting finalize to an artifact (v3) made the call site discoverable but kept the executor delegated to `superpowers:finishing-a-development-branch`. That skill's 4-option menu doesn't fit Superspec's PR-pre-review workflow: its "Option 2: push and create PR" creates a *new* PR from the worktree branch, leaving the user's pre-existing feature branch (with the artifacts and the open pre-review PR) orphaned, and its Option 1 ("Merge locally") merges into the integration branch instead of the feature branch. In v4, the finalize instruction executes the git-side closeout directly — merge worktree → feature branch, push to update the existing PR, post a code-reviewer comment — and demotes the skill to a manual escape hatch for non-canonical flows (solo/no-PR, brand-new PR via the skill's Option 2, keep-as-is, discard). The schema borrows two narrow pieces from the skill (worktree-provenance guard, test-verify → merge structural pattern) with explicit attribution and a documented recreation method; everything else lives in the schema.
 
 ### Migration from schema v1
 
@@ -365,7 +365,7 @@ In-flight v3 changes that already have `finalize.md` are unaffected — the file
 
 For v3 changes mid-flight with no `finalize.md`:
 
-1. `/opsx:continue` under v4 will surface the new Pattern A instruction. If your workflow matches Pattern A (feature branch + pre-review PR opened manually), the schema executes Pattern A automatically — no manual finalize.md authoring needed.
+1. `/opsx:continue` under v4 will surface the new git-side closeout instruction. If your workflow matches the git-side closeout (feature branch + pre-review PR opened manually), the schema executes the git-side closeout automatically — no manual finalize.md authoring needed.
 2. If your workflow doesn't match (no PR yet, or you started on the integration branch), use the escape hatch documented in the finalize instruction.
 
 If you previously ran the v3 finalize and ended up with the two-branch schism (an orphan branch on remote and a PR from a different branch), the recommended cleanup is:
