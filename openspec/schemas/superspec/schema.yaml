@@ -268,7 +268,7 @@ artifacts:
 
   - id: finalize
     generates: finalize.md
-    description: Git-side closeout — merge worktree back into feature branch, push the branch, and update the PR if one exists
+    description: Git-side closeout — merge worktree back into feature branch, push, optionally open PR, post code-reviewer comment
     template: finalize.md
     instruction: |
       The git-side closeout is Superspec's canonical finalize flow:
@@ -386,7 +386,9 @@ artifacts:
          - Worktree: <path or "removed">
          - Cleanup: `removed` (or `preserved (harness-owned)`)
          - Tests baseline status at finish: `passing`
-         - PR comment status: filled in by step 11 below
+         - PR comment status: filled in by step 12 below (or by
+           step 11 if the user declines the PR-creation prompt /
+           the session is non-interactive)
          - Next step: per templates/finalize.md `pr-updated` bullet
            (archive → push → merge sequence).
 
@@ -401,10 +403,70 @@ artifacts:
           # If a PR already exists for this branch, it auto-updates
           # with the merge commits, finalize.md, and the implementation
           # history. If no PR exists, this push creates (or updates)
-          # the remote tracking branch — the user can `gh pr create`
-          # later, or skip the PR entirely for local-only changes.
+          # the remote tracking branch — step 11 below will offer to
+          # open a PR.
 
-      11. Run the comment-posting subroutine (see "Code-reviewer
+      11. Offer to open a code-review PR (interactive prompt). This
+          step makes finalize the SDLC-natural moment to open the PR
+          when the team didn't open one for spec pre-review:
+
+          PR_NUMBER=$(gh pr view "$FEATURE_BRANCH" --json number --jq .number 2>/dev/null)
+
+          If PR_NUMBER is non-empty:
+            A PR already exists (likely the spec pre-review PR).
+            Skip to step 12 — nothing to prompt.
+
+          If PR_NUMBER is empty AND the session is interactive:
+            a. Read proposal.md (if present at
+               openspec/changes/<change-name>/proposal.md) and infer
+               a conventional-commit type for the suggested title:
+                 - feat:     new capability or behavior change (default if unclear)
+                 - fix:      bug fix restoring expected behavior
+                 - refactor: internal restructuring without behavior change
+                 - docs:     documentation-only
+                 - test:     tests-only
+                 - chore:    tooling, deps, config
+               If a natural scope is obvious (e.g., an affected
+               capability name from proposal.md's Capabilities
+               section), format as
+               `<type>(<scope>): <change-name>`. Otherwise
+               `<type>: <change-name>`.
+
+            b. Prompt the user:
+
+                 No PR exists for <feature-branch>. Open one now?
+
+                 Suggested title: <generated conventional-commit title>
+
+                 1. Yes, create PR with the suggested title (recommended)
+                 2. Yes, create PR with a custom title (please provide it)
+                 3. No, skip PR creation — I'll open it later or never
+
+            c. If the user picks 1 or 2, create the PR:
+
+                 gh pr create --title "<title>" --body "$(cat <<'EOF'
+                 Implements OpenSpec change `<change-name>`.
+
+                 Full artifacts are in `openspec/changes/<change-name>/`. The
+                 superspec-generated code-reviewer orientation is posted as a
+                 comment on this PR.
+                 EOF
+                 )"
+
+               Capture the new PR URL and use it for the orientation
+               comment in step 12.
+
+            d. If the user picks 3:
+               Record `PR comment status: skipped (no PR)` in
+               finalize.md. Skip step 12 (which would self-skip
+               anyway).
+
+          If PR_NUMBER is empty AND the session is non-interactive:
+            Skip silently. Record
+            `PR comment status: skipped (no PR)` in finalize.md.
+            Skip step 12.
+
+      12. Run the comment-posting subroutine (see "Code-reviewer
           onboarding comment subroutine" below). Update the
           `PR comment status` field in finalize.md with the result
           and amend the receipt commit (or add a follow-up commit
@@ -424,7 +486,7 @@ artifacts:
       Assumption: the human who pre-reviewed the proposal/specs
       (logic review) may not be the same human who reviews the code.
       This subroutine posts a single PR comment to orient the code
-      reviewer. It is invoked from the git-side closeout (step 11)
+      reviewer. It is invoked from the git-side closeout (step 12)
       AND from the escape hatch (step 3 of the escape-hatch
       instructions below)
       so that any PR present at finalize completion gets a comment.
@@ -450,11 +512,9 @@ artifacts:
          <!-- superspec:finalize-comment -->
          ## Superspec finalize — code review orientation
 
-         This PR has just been updated with the implementation and
-         the full openspec change directory at
-         `openspec/changes/<change-name>/`. It is transitioning
-         from logic pre-review (which the spec/design reviewer
-         already completed) to **code review**.
+         This PR contains the implementation and the full openspec
+         change directory at `openspec/changes/<change-name>/`.
+         The code is ready for review.
 
          ### What this change is
 

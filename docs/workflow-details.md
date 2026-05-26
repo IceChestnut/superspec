@@ -287,8 +287,9 @@ It contains a single step.
 7. Delete the local worktree branch (`git branch -d <worktree-branch>`).
 8. Write `finalize.md` on the feature branch with Outcome `pr-updated`, the PR URL (discovered via `gh pr view`), final branch state, worktree cleanup status, test-baseline status, and the comment-status field (filled in step 11).
 9. Commit the receipt: `docs(openspec): finalize receipt for <change>`.
-10. `git push origin <feature-branch>` — if a PR was opened manually between plan and apply for spec pre-review, it auto-updates with the merge commits, finalize.md, and the full implementation history. If no PR exists, this push creates (or updates) the remote tracking branch; the user can `gh pr create` later or skip the PR entirely.
-11. Post (or edit in place) a single code-reviewer onboarding comment on the PR. The subroutine self-skips when no PR exists, recording `PR comment: skipped (no PR)` in finalize.md.
+10. `git push origin <feature-branch>` — if a PR was opened manually between plan and apply for spec pre-review, it auto-updates with the merge commits, finalize.md, and the full implementation history. If no PR exists, this push creates (or updates) the remote tracking branch.
+11. **PR creation prompt** — if no PR exists for the feature branch and the session is interactive, prompt the user to open one. The agent suggests a conventional-commit title derived from the change's proposal.md (default `feat: <change-name>`). The user picks: create with suggested title, create with custom title, or skip. If skipped or non-interactive, no PR is created and the orientation-comment step self-skips.
+12. Post (or edit in place) a single code-reviewer onboarding comment on the PR. The subroutine self-skips when no PR exists, recording `PR comment: skipped (no PR)` in finalize.md.
 
 The PR comment uses a marker (`<!-- superspec:finalize-comment -->`) to support idempotent upsert — re-running finalize edits the existing comment rather than duplicating it. The body is **paraphrased by the agent** from `proposal.md`, `tasks.md`, `apply.md`, `verify.md`, and (if present) `retrospective.md`. Verbatim copy from the source artifacts is forbidden. Target length 200–400 words, hard ceiling 600 words.
 
@@ -298,6 +299,8 @@ The PR comment uses a marker (`<!-- superspec:finalize-comment -->`) to support 
 - A worktree at the expected path exists for the change.
 
 **Optional precondition (recommended for team workflows).** A PR for the feature branch exists on the remote (the "spec pre-review PR", opened manually between plan and apply so the logic reviewer can approve the proposal/specs/plan before code is written). If you didn't open a pre-review PR, the canonical git-side closeout still works: it merges the worktree back, pushes the feature branch (creating the remote tracking branch if needed), and the code-reviewer comment subroutine self-skips (recording `PR comment: skipped (no PR)` in finalize.md). You can `gh pr create` after finalize completes, or never open a PR at all.
+
+If you didn't open a pre-review PR, finalize will offer to open the code-review PR at step 11 — the SDLC-natural moment. You can decline the prompt; the closeout still completes and you can open the PR later (or not at all).
 
 **Source phase used.** Schema-owned. Two narrow pieces are borrowed from `superpowers:finishing-a-development-branch` (Step 5 Option 1 merge structure + Step 6 worktree-cleanup provenance guard) with attribution and a recreation method — see the dedicated subsection below in the Superpowers skill index.
 

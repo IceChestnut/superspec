@@ -30,6 +30,7 @@ Step 0 treats "start on integration branch" as canonical and "start on a feature
 - Document the logic borrowed from the upstream skill with explicit attribution and a recreation method, so the schema can be re-aligned with upstream if the skill changes.
 - Update all docs, the SVG flowchart, INTEGRATION.md, and templates to reflect the new flow.
 - **Onboard the code reviewer with a single PR comment** posted at finalize completion when a PR exists. The comment is aimed at a reviewer who did **not** pre-review the spec (the logic reviewer and code reviewer are often different humans). It links to the change artifacts, suggests a reading order, and summarizes what to look for in the diff.
+- **Offer to open the code-review PR at finalize time** when no PR exists yet. The decision is made at the SDLC-natural moment, with a suggested conventional-commit title derived from the change's proposal.md. Users who don't want a PR can decline; the closeout still completes.
 
 ## Non-goals
 
@@ -151,6 +152,12 @@ The Implementation summary section is the only one where values are **extracted 
 **Failure handling.** The comment-posting subroutine is non-blocking. If `gh` is unavailable, the PR is in a draft state that disallows comments, or the API call fails for any reason, the agent records the failure in finalize.md (`PR comment: failed — <reason>`) but does not roll back the merge/push. The change is still git-clean; the comment is a nice-to-have, not a correctness gate.
 
 **Where the comment content comes from.** All `<bracketed>` placeholders are filled by summarizing the change directory's own artifacts. No external state required. If a referenced artifact is missing (e.g., no retrospective.md, no design.md), the corresponding section uses the documented fallback wording or is omitted entirely (the reading-order step for design.md is conditional).
+
+### PR-creation prompt (new in finalize step 11)
+
+When the canonical git-side closeout reaches finalize and no PR exists for the feature branch, the schema prompts the user to open one. The agent reads proposal.md to infer a conventional-commit type and suggests a title (default `feat: <change-name>`). The user picks: create with suggested title, create with custom title, or skip. Skipping is non-blocking; finalize.md records `PR comment status: skipped (no PR)` and the closeout completes. In non-interactive contexts, the prompt is silently skipped with the same recorded outcome.
+
+This step exists because finalize is the SDLC-natural moment to open a code-review PR — the implementation just landed on the feature branch, tests passed, and the PR's content is well-defined. Asking earlier (e.g., during apply) would be premature; asking later forces users to remember `gh pr create` outside the workflow.
 
 ### Escape hatch: manual skill invocation
 

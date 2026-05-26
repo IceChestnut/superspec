@@ -79,7 +79,7 @@ There is also one **fallback**:
                       ▼
                   ┌──────────┐
                   │ finalize │ ◄── schema-executed git-side closeout (v4)
-                  │          │     writes finalize.md + updates PR
+                  │          │     writes finalize.md + optionally manages PR
                   └──────────┘
                       │
                       ▼
@@ -232,12 +232,13 @@ If any check fails, go back to the corresponding artifact, fix it, and re-run ve
 7. Delete the local worktree branch.
 8. Write `finalize.md` on the feature branch with Outcome: `pr-updated`.
 9. Commit the receipt on the feature branch.
-10. `git push origin <feature-branch>` — if a PR was opened manually between plan and apply for spec pre-review, it auto-updates with the merge commits and finalize.md. If no PR exists, this push creates the remote tracking branch; the user can `gh pr create` later or skip the PR entirely.
-11. Post (or edit in place) a single code-reviewer onboarding comment on the PR, summarizing the change for a reviewer who did not see the spec pre-review.
+10. `git push origin <feature-branch>` — if a PR was opened manually between plan and apply for spec pre-review, it auto-updates with the merge commits and finalize.md. If no PR exists, this push creates the remote tracking branch.
+11. **PR creation prompt** — if no PR exists for the feature branch and the session is interactive, prompt the user to open one. The agent suggests a conventional-commit title derived from the change's proposal.md (default `feat: <change-name>`). The user picks: create with suggested title, create with custom title, or skip. If skipped or non-interactive, no PR is created and the orientation-comment step self-skips.
+12. Post (or edit in place) a single code-reviewer onboarding comment on the PR, summarizing the change for a reviewer who did not see the spec pre-review.
 
 The comment uses a marker (`<!-- superspec:finalize-comment -->`) for idempotent upsert; re-running finalize edits the existing comment rather than duplicating it. The body is **summarized in the agent's own words** from the change artifacts; verbatim paste is forbidden.
 
-The spec pre-review PR is an **optional** team-workflow pattern — recommended for teams that want a logic-review checkpoint before code is written, but not required. The canonical git-side closeout works whether or not a PR exists at finalize time; the comment subroutine self-skips when there's no PR.
+The spec pre-review PR is an **optional** team-workflow pattern — recommended for teams that want a logic-review checkpoint before code is written, but not required. The canonical git-side closeout works whether or not a PR exists at finalize time; the comment subroutine self-skips when there's no PR. If the user didn't open a pre-review PR, finalize's PR-creation prompt is the natural moment to open the code-review PR — Superspec doesn't force the decision to happen earlier.
 
 #### 4-2. Escape hatch (manual skill invocation)
 
