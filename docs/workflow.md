@@ -49,9 +49,9 @@ Primary output: `verify.md`.
 
 ### 5. Finalization
 
-The `finalize` artifact is reached via `/opsx:continue` after verify reports PASS. As of schema v4, its instruction executes **the git-side closeout** directly — merging the implementation worktree branch back into the user's feature branch, pushing the feature branch to update the PR that was opened manually for spec pre-review, writing `finalize.md`, and posting a single code-reviewer onboarding comment on the PR. `superpowers:finishing-a-development-branch` is retained only as a manual escape hatch for workflows that don't match the git-side closeout (solo / no-PR, brand-new PR, keep-as-is, discard). The recommended retrospective lives here as well, before archive.
+The `finalize` artifact is reached via `/opsx:continue` after verify reports PASS. As of schema v4, its instruction executes **the git-side closeout** directly — merging the implementation worktree branch back into the user's feature branch, pushing the feature branch (which updates the existing PR if one was opened manually for spec pre-review, or creates a remote tracking branch if not), writing `finalize.md`, and (if a PR exists) posting a single code-reviewer onboarding comment on it. `superpowers:finishing-a-development-branch` is retained only as a manual escape hatch for workflows that don't match the git-side closeout (solo merge-to-main, brand-new PR via the skill, keep-as-is, discard). The recommended retrospective lives here as well, before archive.
 
-Primary outputs: `finalize.md` (the closeout receipt) + an updated PR with a code-reviewer onboarding comment; optional `retrospective.md`.
+Primary outputs: `finalize.md` (the closeout receipt) + (if a PR exists) an updated PR with a code-reviewer onboarding comment; optional `retrospective.md`.
 
 ### 6. Archival
 

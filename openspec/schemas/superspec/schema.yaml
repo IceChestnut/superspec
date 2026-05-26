@@ -10,8 +10,11 @@ description: >
   /opsx:apply has executed. Finalize requires verify and is reached via
   /opsx:continue after verify reports PASS; its instruction executes
   the git-side closeout directly (merge worktree branch back into the
-  feature branch, push to update the existing PR, post a code-reviewer
-  onboarding comment on the PR) and records the outcome in finalize.md.
+  feature branch, push the branch — which updates an existing spec
+  pre-review PR if one was opened between plan and apply, or creates
+  a remote tracking branch otherwise — and post a code-reviewer
+  onboarding comment on the PR if one exists) and records the outcome
+  in finalize.md.
   Apply uses git worktrees + subagent-driven-development (brings TDD and
   code-review transitively). executing-plans is documented only as a
   fallback for platforms without subagent support. v3 (historical):
@@ -20,7 +23,9 @@ description: >
   superpowers:finishing-a-development-branch. v4 (current): finalize's
   instruction is rewritten to execute the git-side closeout directly;
   the skill is retained as a manual escape hatch for non-canonical flows
-  (solo/no-PR, brand-new PR, keep-as-is, discard). Apply step 0
+  (solo merge-to-main, brand-new PR via the skill, keep-as-is,
+  discard — note that "no pre-review PR" is handled by the
+  canonical closeout, not the escape hatch). Apply step 0
   wording is also updated to recommend a user-created feature branch
   as the canonical starting state (previously the schema recommended
   starting on the integration branch).
@@ -242,9 +247,10 @@ artifacts:
       Recommended convergence loop:
       - PASS → /opsx:continue advances to the finalize artifact, which
         executes the git-side closeout directly (merge worktree →
-        feature branch, push to update PR, post code-reviewer comment).
-        The skill superpowers:finishing-a-development-branch is retained
-        as a manual escape hatch for non-canonical flows. /opsx:archive
+        feature branch, push the branch, update the PR if one exists,
+        post code-reviewer comment if a PR is present). The skill
+        superpowers:finishing-a-development-branch is retained as a
+        manual escape hatch for non-canonical flows. /opsx:archive
         runs once finalize.md exists.
       - PASS_WITH_WARNINGS → same path as PASS; warnings are recorded
         but do not block.
@@ -262,31 +268,46 @@ artifacts:
 
   - id: finalize
     generates: finalize.md
-    description: Git-side closeout — merge worktree back into feature branch and update PR
+    description: Git-side closeout — merge worktree back into feature branch, push the branch, and update the PR if one exists
     template: finalize.md
     instruction: |
       The git-side closeout is Superspec's canonical finalize flow:
       merge the implementation worktree branch back into your feature
-      branch locally, push the feature branch to update the existing
-      PR (the one opened manually between plan and apply for spec
-      pre-review), write the finalize.md receipt, and post a
-      code-reviewer onboarding comment on the PR.
+      branch locally, push the feature branch (which updates the
+      existing PR if one was opened manually between plan and apply
+      for spec pre-review, or creates a remote tracking branch if
+      not), write the finalize.md receipt, and — if a PR exists —
+      post a code-reviewer onboarding comment on it. The spec
+      pre-review PR is an optional team-workflow pattern; the
+      canonical closeout works either way.
 
-      Prerequisites for the git-side closeout:
+      Prerequisites for the git-side closeout (canonical path):
       - You are on a feature branch in the main checkout (apply
         step 0 should have recommended this — check `git branch
         --show-current`).
       - The feature branch is NOT the integration branch (main /
         master); if it is, skip the git-side closeout and use the
         escape hatch at the bottom of this instruction.
-      - A PR for this feature branch already exists on the remote
-        (you opened it manually between plan and apply).
       - Apply ran in a worktree at `.worktrees/<change-name>/` with
         a worktree branch named `<change-name>`.
 
-      If any prerequisite is not met, skip the auto-executed flow
-      below and invoke `superpowers:finishing-a-development-branch`
-      manually — see "Escape hatch" at the bottom.
+      Optional precondition (recommended for team workflows):
+      - A PR for this feature branch already exists on the remote.
+        This is the "spec pre-review PR" — opened manually between
+        plan and apply so the logic reviewer can approve the
+        proposal/specs/plan before code is written. If you didn't
+        open a pre-review PR, the canonical git-side closeout
+        still works: it merges the worktree back, pushes the
+        feature branch (creating the remote tracking branch if
+        needed), and the code-reviewer comment subroutine
+        self-skips (recording `PR comment: skipped (no PR)` in
+        finalize.md). You can `gh pr create` after finalize
+        completes, or never open a PR at all.
+
+      If a structural prerequisite (feature branch, worktree) is
+      not met, skip the auto-executed flow below and invoke
+      `superpowers:finishing-a-development-branch` manually — see
+      "Escape hatch" at the bottom.
 
       Git-side closeout execution steps:
 
@@ -374,11 +395,14 @@ artifacts:
          git add openspec/changes/<change-name>/finalize.md
          git commit -m "docs(openspec): finalize receipt for <change-name>"
 
-      10. Push to update the existing PR:
+      10. Push the feature branch:
 
           git push origin "$FEATURE_BRANCH"
-          # The PR auto-updates with the merge commits, finalize.md,
-          # and the implementation history.
+          # If a PR already exists for this branch, it auto-updates
+          # with the merge commits, finalize.md, and the implementation
+          # history. If no PR exists, this push creates (or updates)
+          # the remote tracking branch — the user can `gh pr create`
+          # later, or skip the PR entirely for local-only changes.
 
       11. Run the comment-posting subroutine (see "Code-reviewer
           onboarding comment subroutine" below). Update the
@@ -673,8 +697,9 @@ apply:
        Convergence loop — react to the verify outcome:
        - PASS or PASS_WITH_WARNINGS → proceed via /opsx:continue to the
          finalize artifact, which executes the git-side closeout
-         directly (merge worktree → feature branch, push to update PR,
-         post code-reviewer comment) and writes finalize.md. The skill
+         directly (merge worktree → feature branch, push the branch,
+         update the PR if one exists, post code-reviewer comment if a
+         PR is present) and writes finalize.md. The skill
          superpowers:finishing-a-development-branch is retained as a
          manual escape hatch for non-canonical flows. /opsx:archive
          runs once finalize.md exists.

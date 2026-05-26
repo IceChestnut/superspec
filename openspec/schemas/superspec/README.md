@@ -38,7 +38,7 @@ Differences from `spec-driven`:
 | | spec-driven | sdd-plus-superpowers (v4) |
 |---|---|---|
 | Starting point | proposal (written manually) | **brainstorm** (invokes brainstorming skill) |
-| Endpoint | tasks (coarse-grained) | **finalize** (the git-side closeout: merge worktree → feature branch + push to update PR + code-reviewer onboarding comment; archive follows as a CLI step) |
+| Endpoint | tasks (coarse-grained) | **finalize** (the git-side closeout: merge worktree → feature branch + push the branch + if a PR exists, post code-reviewer onboarding comment; archive follows as a CLI step) |
 | apply requires | tasks | **plan** |
 | apply method | Standard task-by-task | **worktree + subagent-driven-development** |
 | Additional artifacts | — | brainstorm, plan, apply (receipt), **finalize (receipt)** |
@@ -77,7 +77,7 @@ This is achieved through context injection (appending directives when invoking t
 /opsx:ff my-feature    # End-to-end: create directory + brainstorm + proposal + design + specs + tasks + plan
 /opsx:apply            # worktree + subagent-driven-development (writes apply.md)
 /opsx:verify           # 5 OpenSpec checks (writes verify.md; requires apply.md)
-/opsx:continue         # → finalize (the git-side closeout: merges worktree → feature branch, updates PR, writes finalize.md, posts code-reviewer comment; v4)
+/opsx:continue         # → finalize (the git-side closeout: merges worktree → feature branch, pushes branch, updates PR if one exists, writes finalize.md, posts code-reviewer comment if PR exists; v4)
 /opsx:archive          # sync delta specs + archive change dir
 ```
 
@@ -92,7 +92,7 @@ This is achieved through context injection (appending directives when invoking t
 /opsx:continue         # → plan
 /opsx:apply            # writes apply.md
 /opsx:verify           # writes verify.md (requires apply.md)
-/opsx:continue         # → finalize (the git-side closeout: merges worktree → feature branch, updates PR, writes finalize.md, posts code-reviewer comment; v4)
+/opsx:continue         # → finalize (the git-side closeout: merges worktree → feature branch, pushes branch, updates PR if one exists, writes finalize.md, posts code-reviewer comment if PR exists; v4)
 /opsx:archive          # sync delta specs + archive change dir
 ```
 
@@ -142,9 +142,9 @@ The v3 finalize artifact invoked `superpowers:finishing-a-development-branch` an
 1. **finalize.md ended up off the PR branch.** The skill ran Option 2 (push + create PR) before finalize.md was written; the agent then wrote finalize.md from whatever CWD it landed in (typically the main checkout, on the user's feature branch). The PR — created from the worktree branch — did not contain finalize.md.
 2. **Two related branches ended up on remote.** The user's feature branch (with artifacts and pre-review PR) sat orphaned while the skill opened a new PR from the worktree branch.
 
-The skill's "base branch" is `main`; its "feature branch" is the worktree branch. Neither aligns with Superspec's "merge worktree into the user's feature branch, then push to update the existing PR" intent. Overriding the skill's interpretation from the schema instruction was attempted and judged too brittle.
+The skill's "base branch" is `main`; its "feature branch" is the worktree branch. Neither aligns with Superspec's "merge worktree into the user's feature branch, then push" intent. Overriding the skill's interpretation from the schema instruction was attempted and judged too brittle.
 
-v4's resolution: the schema executes the git-side closeout directly (merge worktree → feature branch → push → code-reviewer comment). Two narrow pieces are borrowed from the skill with explicit attribution and a documented recreation method — the worktree-cleanup provenance guard and the test-verify → merge → test-verify → cleanup structural pattern. The skill remains a first-class manual escape hatch for users whose workflow doesn't match the git-side closeout (solo / no-PR, brand-new PR, keep-as-is, discard).
+v4's resolution: the schema executes the git-side closeout directly (merge worktree → feature branch → push → code-reviewer comment if a PR exists). Two narrow pieces are borrowed from the skill with explicit attribution and a documented recreation method — the worktree-cleanup provenance guard and the test-verify → merge → test-verify → cleanup structural pattern. The schema-executed closeout handles both the "spec pre-review PR exists" and "no PR yet" cases cleanly — when a PR exists, the push updates it and the comment subroutine posts; when no PR exists, the push creates the remote tracking branch and the comment subroutine self-skips. The skill remains a first-class manual escape hatch for the truly off-canonical flows (solo merge-to-main, brand-new PR via the skill, keep-as-is, discard).
 
 ### Fallback Strategy
 

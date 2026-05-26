@@ -264,15 +264,15 @@ If any check fails, the agent returns to the offending artifact, fixes it, and r
 
 ## Phase 5: Finalization
 
-The Finalization phase performs the git-side closeout for the change — merging the implementation worktree branch back into the user's feature branch, pushing the feature branch to update the existing PR, writing the finalize receipt, and posting a single code-reviewer onboarding comment on the PR. Schema v4 introduced **the git-side closeout** as the canonical finalize flow, executed directly by the schema instruction.
+The Finalization phase performs the git-side closeout for the change — merging the implementation worktree branch back into the user's feature branch, pushing the feature branch (which updates the existing PR if one was opened for spec pre-review, or creates a remote tracking branch otherwise), writing the finalize receipt, and posting a single code-reviewer onboarding comment on the PR when one exists. Schema v4 introduced **the git-side closeout** as the canonical finalize flow, executed directly by the schema instruction.
 
 It contains a single step.
 
 ### Step 9. Finalize — `finalize` (the git-side closeout)
 
-> Closes out the development branch in git terms; writes the finalize.md receipt; updates the existing PR; posts a code-reviewer onboarding comment.
+> Closes out the development branch in git terms; writes the finalize.md receipt; pushes the feature branch (updates the existing PR if one exists); posts a code-reviewer onboarding comment when a PR exists.
 
-**Brief why:** Restore the documented golden path — a single PR on the user's feature branch that carries logic pre-review, implementation, finalize, and archive commits in one reviewable diff before merge.
+**Brief why:** Restore the documented golden path — when a team uses the optional spec pre-review PR pattern, a single PR on the user's feature branch carries logic pre-review, implementation, finalize, and archive commits in one reviewable diff before merge. When a team doesn't use the pre-review pattern, the same closeout still works — merging the worktree back, pushing the branch, and writing the receipt without requiring a PR.
 
 **Why it's required.** Before v4, the post-verify closeout invoked `superpowers:finishing-a-development-branch` and let its 4-option menu drive things. In practice this produced two failure modes (finalize.md off the PR branch; two related branches on remote — the user's feature branch with the pre-review PR sat orphaned while the skill opened a new PR from the worktree branch). v4 fixes this by having the schema execute the git-side closeout directly so the canonical flow is deterministic and matches the documented golden path.
 
@@ -287,16 +287,17 @@ It contains a single step.
 7. Delete the local worktree branch (`git branch -d <worktree-branch>`).
 8. Write `finalize.md` on the feature branch with Outcome `pr-updated`, the PR URL (discovered via `gh pr view`), final branch state, worktree cleanup status, test-baseline status, and the comment-status field (filled in step 11).
 9. Commit the receipt: `docs(openspec): finalize receipt for <change>`.
-10. `git push origin <feature-branch>` — the existing PR (opened manually between plan and apply for spec pre-review) auto-updates with the merge commits, finalize.md, and the full implementation history.
-11. Post (or edit in place) a single code-reviewer onboarding comment on the PR.
+10. `git push origin <feature-branch>` — if a PR was opened manually between plan and apply for spec pre-review, it auto-updates with the merge commits, finalize.md, and the full implementation history. If no PR exists, this push creates (or updates) the remote tracking branch; the user can `gh pr create` later or skip the PR entirely.
+11. Post (or edit in place) a single code-reviewer onboarding comment on the PR. The subroutine self-skips when no PR exists, recording `PR comment: skipped (no PR)` in finalize.md.
 
 The PR comment uses a marker (`<!-- superspec:finalize-comment -->`) to support idempotent upsert — re-running finalize edits the existing comment rather than duplicating it. The body is **paraphrased by the agent** from `proposal.md`, `tasks.md`, `apply.md`, `verify.md`, and (if present) `retrospective.md`. Verbatim copy from the source artifacts is forbidden. Target length 200–400 words, hard ceiling 600 words.
 
-**Prerequisites for the git-side closeout.** The schema instruction checks all of these and skips the git-side closeout (directing the user to the escape hatch) if any is unmet:
+**Prerequisites for the git-side closeout (canonical path).** The schema instruction checks all of these and skips the git-side closeout (directing the user to the escape hatch) if any structural prerequisite is unmet:
 
 - Currently on a feature branch in the main checkout (not the integration branch, not detached HEAD).
-- A PR for the feature branch exists on the remote (`gh pr view <feature-branch>` returns a number).
 - A worktree at the expected path exists for the change.
+
+**Optional precondition (recommended for team workflows).** A PR for the feature branch exists on the remote (the "spec pre-review PR", opened manually between plan and apply so the logic reviewer can approve the proposal/specs/plan before code is written). If you didn't open a pre-review PR, the canonical git-side closeout still works: it merges the worktree back, pushes the feature branch (creating the remote tracking branch if needed), and the code-reviewer comment subroutine self-skips (recording `PR comment: skipped (no PR)` in finalize.md). You can `gh pr create` after finalize completes, or never open a PR at all.
 
 **Source phase used.** Schema-owned. Two narrow pieces are borrowed from `superpowers:finishing-a-development-branch` (Step 5 Option 1 merge structure + Step 6 worktree-cleanup provenance guard) with attribution and a recreation method — see the dedicated subsection below in the Superpowers skill index.
 
@@ -351,6 +352,8 @@ The Archival phase syncs the change's delta specs into the living spec tree and 
 5. Push the archive commits to update the PR (git push)
 6. PR merge (gh pr merge --squash --delete-branch or GitHub UI)
 ```
+
+This is the PR-pre-review variant of the golden path — applicable when a team uses the optional spec pre-review PR pattern (PR opened manually between plan and apply). A **no-PR variant** also exists: step 2 ends with finalize.md recording `PR comment: skipped (no PR)` instead of posting a comment, and step 3 onward becomes the user's choice — they can `gh pr create` after finalize to enter the PR-review variant late, or skip the PR entirely (run `/opsx:archive` on the feature branch and merge/rebase into the integration branch locally). The schema-executed closeout is identical in both variants; only the PR side differs.
 
 The archive-before-merge ordering keeps the PR's diff complete: every commit that went into the change (implementation, finalize.md, archive sync) is in the PR. If the PR is merged before archive runs, the archive commits would have to be authored on the integration branch after the fact — recoverable but loses the unified audit trail.
 

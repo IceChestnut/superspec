@@ -38,7 +38,7 @@ Every change moves through the same six phases, in order:
 2. **Artifact creation** — produce the proposal, optional design, [delta specs](https://github.com/Fission-AI/OpenSpec/blob/main/docs/concepts.md#delta-specs), tasks, and the micro-task plan.
 3. **Code implementation** — write the code in an isolated worktree using subagent-driven TDD.
 4. **Spec validation** — verify the implementation matches the delta specs and tasks.
-5. **Finalization** — the git-side closeout (schema-executed): merge the worktree branch back into your feature branch, push to update the PR opened earlier for spec pre-review, record the outcome in `finalize.md`, and post a code-reviewer onboarding comment on the PR.
+5. **Finalization** — the git-side closeout (schema-executed): merge the worktree branch back into your feature branch, push the branch (which updates the existing PR if you opened one for spec pre-review, or creates a remote tracking branch if not), record the outcome in `finalize.md`, and post a code-reviewer onboarding comment if a PR exists.
 6. **Archival** — merge the change's delta specs into the project's living specs and archive the change directory.
 
 Each phase produces concrete artifacts in the change directory and (where applicable) hands off to a Superpowers skill.
@@ -174,7 +174,7 @@ Stop at each artifact, review it, give feedback, and only continue when you're s
 /opsx:continue         # → plan
 /opsx:apply            # Worktree + Superpowers TDD loop — produces the actual code and writes apply.md (the v2 receipt)
 /opsx:verify           # Validate implementation matches the delta specs and tasks (requires apply.md to exist)
-/opsx:continue         # → finalize (the git-side closeout: merges worktree → feature branch, updates PR, writes finalize.md, posts code-reviewer comment; v4)
+/opsx:continue         # → finalize (the git-side closeout: merges worktree → feature branch, pushes branch, updates PR if one exists, writes finalize.md, posts code-reviewer comment if PR exists; v4)
 /opsx:archive          # Sync the change's delta specs into project specs, then archive
 ```
 
@@ -186,7 +186,7 @@ For small, well-understood changes where you trust the agent to produce every ar
 /opsx:ff my-feature    # End-to-end: brainstorm + proposal + design + specs + tasks + plan
 /opsx:apply            # Worktree + Superpowers TDD loop — produces the actual code and writes apply.md (the v2 receipt)
 /opsx:verify           # Validate implementation matches the delta specs and tasks (requires apply.md to exist)
-/opsx:continue         # → finalize (the git-side closeout: merges worktree → feature branch, updates PR, writes finalize.md, posts code-reviewer comment; v4)
+/opsx:continue         # → finalize (the git-side closeout: merges worktree → feature branch, pushes branch, updates PR if one exists, writes finalize.md, posts code-reviewer comment if PR exists; v4)
 /opsx:archive          # Sync the change's delta specs into project specs, then archive
 ```
 

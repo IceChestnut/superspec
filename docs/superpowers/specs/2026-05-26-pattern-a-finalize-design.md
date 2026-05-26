@@ -23,7 +23,7 @@ Step 0 treats "start on integration branch" as canonical and "start on a feature
 
 ## Goals
 
-- Restore the Phase 6 golden path: a single PR on the user's feature branch, opened during phases 1-6 for logic pre-review and updated through finalize and archive, containing every commit in the change.
+- Restore the Phase 6 golden path: when a team uses the optional spec pre-review PR pattern, a single PR on the user's feature branch (opened between plan and apply) carries logic-review and code-review traffic, and is updated through finalize and archive in one PR diff. When a team doesn't use the pre-review pattern, the same closeout still works — it merges worktree → feature branch, pushes the branch, and writes the receipt; the user opens the PR later (or never).
 - Make the canonical Superspec finalize flow execute deterministically via `/opsx:continue` with no copy-paste reconciliation.
 - Demote `superpowers:finishing-a-development-branch` from "the finalize executor" to "an escape hatch users can invoke manually when their flow doesn't match the git-side closeout."
 - Update `apply` step 0 wording to recommend a user-created feature branch as the canonical starting state.
@@ -56,10 +56,12 @@ The workflow the schema commits to executing automatically:
 | `/opsx:archive` | feature branch in main checkout | delta sync + change-dir move; push to update PR |
 | PR merge | GitHub | squash-merge into main; branch deleted |
 
+The `(manual) git push + gh pr create` row is **optional** — recommended for teams that want a spec pre-review checkpoint with a logic reviewer before code is written, but not required. The schema-executed git-side closeout works whether or not a PR exists at finalize time: it merges worktree → feature branch, pushes the branch (creating the remote tracking branch if no PR exists), and the comment subroutine self-skips if no PR is present. Users who don't open a pre-review PR can still run `gh pr create` after finalize completes — or never open one at all for local-only changes.
+
 Two key invariants the git-side closeout guarantees:
 
 - **One remote feature-related branch** (the user's feature branch). The worktree branch is local-only and is consumed at finalize time.
-- **One PR carries everything.** Logic-review commits + implementation commits + finalize.md + archive commits are all in the same PR's diff before merge.
+- **One PR carries everything (when a PR is used).** In the optional pre-review variant, logic-review commits + implementation commits + finalize.md + archive commits are all in the same PR's diff before merge.
 
 ## Design
 
@@ -76,8 +78,8 @@ The finalize instruction owns the full git-side closeout sequence. Concretely th
 7. `git branch -d <worktree-branch>`.
 8. Write `openspec/changes/<name>/finalize.md` per `templates/finalize.md`. Outcome: `pr-updated` (a new outcome value, distinct from v3's `pr-created`). PR URL discovered via `gh pr view <feature-branch> --json url`.
 9. `git commit` with message `docs(openspec): finalize receipt for <change>`.
-10. `git push origin <feature-branch>` — the existing PR auto-updates with the implementation commits, finalize.md, and the merge.
-11. **Detect existing PR and post a code-reviewer onboarding comment** (see "Code-reviewer onboarding comment" below). Non-blocking — if the comment step fails, finalize still succeeds; the failure is recorded in finalize.md.
+10. `git push origin <feature-branch>` — if a PR already exists for this branch (the optional spec pre-review PR), it auto-updates with the implementation commits, finalize.md, and the merge. If no PR exists, this push creates (or updates) the remote tracking branch; the user can `gh pr create` later or skip the PR entirely.
+11. **Detect existing PR and post a code-reviewer onboarding comment** (see "Code-reviewer onboarding comment" below). The subroutine self-skips when no PR is present. Non-blocking — if the comment step fails, finalize still succeeds; the failure is recorded in finalize.md.
 
 ### Code-reviewer onboarding comment
 
@@ -287,7 +289,7 @@ No content change needed; the convergence-loop reminder already says "PASS → `
 
 - **Fast-forward merge fails in step 4** (feature branch diverged after worktree creation). Stop with a clear error. User reconciles manually (rebase, etc.). This is an uncommon corner — typically the feature branch is untouched while apply runs in the worktree.
 - **Tests pass in worktree (step 2) but fail on merged result (step 5).** Stop. Worktree branch contains the failing state; user investigates. The worktree is still on disk for forensics until they re-run finalize.
-- **`gh pr view` returns no PR for the feature branch.** A prerequisite of the git-side closeout was missed (user skipped the manual `gh pr create`). Schema instruction tells the agent to alert the user and either (a) run `gh pr create` themselves and re-enter finalize, or (b) fall back to the manual escape hatch.
+- **`gh pr view` returns no PR for the feature branch.** Not a failure mode — the canonical git-side closeout runs to completion (merge worktree → feature branch, push, write finalize.md). The code-reviewer comment subroutine self-skips and records `PR comment: skipped (no PR)` in finalize.md. The user can `gh pr create` later (if they want to enter the PR-pre-review variant late), or skip the PR entirely for local-only changes.
 - **Worktree path is harness-owned** (not under `.worktrees/`/`worktrees/`/`~/.config/superpowers/worktrees/`). Provenance guard skips removal. Finalize completes; user removes the worktree manually via their harness.
 - **User on detached HEAD when running `/opsx:continue`.** Apply step 0 already warned about this. The git-side closeout is skipped; user uses the escape hatch.
 - **User started apply on the integration branch.** Apply step 0 warned about this. The git-side closeout's merge-back step would try to merge into main, which is nominally possible but not the workflow Superspec is documenting. Finalize soft-fails: warn the user that the git-side closeout isn't appropriate, point them at the escape hatch, and let them choose.
@@ -306,7 +308,7 @@ Projects pinned to v3 keep working. v4's changes are confined to the finalize ar
 
 - **Schema instruction grows in complexity.** The git-side closeout is ~10 explicit steps with conditional branches (test failures, provenance check, escape-hatch trigger). Mitigation: numbered steps, inline borrowed-logic comments, clear bail-out points. Reviewers should reject PRs that drift the instruction from the documented git-side closeout.
 - **Borrowed logic drifts from upstream.** Mitigation: the inline attribution comments include the upstream commit SHA at port time. A subsection in workflow-details.md restates the discipline and recommends re-checking on every upstream Superpowers minor version bump. No automation; this is discipline-by-convention.
-- **Users skip the manual PR-open step.** The git-side closeout breaks (step 10's push has no PR to update). Mitigation: the schema instruction detects "no PR for this feature branch" at step 8 and falls back to the escape hatch with a clear message. Documented as an edge case above. Non-blocking on the schema side.
+- **Users skip the manual PR-open step.** Not a failure mode — the canonical git-side closeout runs to completion regardless (merge worktree → feature branch, push the branch, write finalize.md). The code-reviewer comment subroutine self-skips when no PR exists, recording `PR comment: skipped (no PR)` in finalize.md. The user can `gh pr create` after finalize completes (if they want to adopt the pre-review pattern late), or skip the PR entirely.
 - **The skill upstream renames Step 5 / Step 6 / Option 1.** The inline attribution comments still point at the upstream URL; the SHA captures the pin. Even if structure changes, the borrowed *logic* (test-verify → merge → cleanup with provenance guard) is the artifact that needs re-evaluation, not the section numbering. The recreation method covers this.
 - **The git-side closeout doesn't fit every team's GitFlow.** Mitigation: the escape hatch is first-class, not a footnote. Teams that want sequential PRs (Pattern B) or stacked PRs (Pattern C) can invoke the skill manually or build a follow-up schema variant.
 
