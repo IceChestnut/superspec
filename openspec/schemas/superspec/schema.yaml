@@ -284,14 +284,13 @@ apply:
   instruction: |
     Before implementing, set up an isolated workspace and executor:
 
-    0. **Pre-flight — commit change artifacts to current branch**:
+    0. **Pre-flight — commit change artifacts to feature branch**:
 
-       Before creating the worktree, verify that the change directory
-       `openspec/changes/<name>/` is committed on the current branch.
-       This prevents drift between the main checkout and the worktree
-       during implementation, and avoids "untracked files would be
-       overwritten by merge" errors when later integrating the worktree
-       back into the main branch.
+       Superspec's canonical starting state is a user-created feature
+       branch (e.g., `spec/<change-name>`, `feat/<change-name>`). The
+       artifact phases (brainstorm through plan) should have committed
+       their files to this branch. Step 0 ensures the change directory
+       is committed before the worktree is created.
 
        Steps:
        a. Run `git status --porcelain openspec/changes/<name>/` to
@@ -313,10 +312,22 @@ apply:
           only modifications (`M`) without untracked entries, skip
           the commit — the change directory is already tracked.
 
-       d. If on a detached HEAD or a branch that is not the project's
-          integration branch (typically `main` or `master`), warn the
-          user but still proceed — the commit lands on the current
-          branch and will be merged later as usual.
+       d. **Branch-state checks** (v4):
+          - **Recommended**: a feature branch (any branch that is not
+            the project's integration branch — typically `main` or
+            `master`). This is the canonical Pattern A starting state.
+            Finalize's Pattern A flow will merge the worktree back
+            into this branch and push to update the existing PR.
+          - **Tolerated with warning**: on the integration branch.
+            Proceed, but warn the user that (1) artifact commits will
+            land on the integration branch and (2) finalize's Pattern A
+            flow will not produce a usable PR because there is no
+            separate feature branch to merge into; the user will need
+            to fall back to the manual escape hatch in finalize.
+          - **Detached HEAD**: warn the user that finalize's Pattern A
+            flow will be skipped (no branch to merge into), and the
+            user will need to use the escape hatch. Proceed with apply
+            on the detached HEAD; the worktree will still be created.
 
     1. **Workspace**: Use the Skill tool to invoke
        **superpowers:using-git-worktrees** to create an isolated
