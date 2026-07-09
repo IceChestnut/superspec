@@ -1,0 +1,8 @@
+# Exclude from published npm package
+# (package.json "files" field is the primary whitelist; this is a safety net)
+
+docs/
+.git/
+.gitignore
+.pre-commit-config.yaml
+node_modules/

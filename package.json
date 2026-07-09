@@ -1,0 +1,27 @@
+{
+  "name": "superspec-init",
+  "version": "0.1.0",
+  "description": "One-command install of the superspec schema into any OpenSpec project",
+  "license": "MIT",
+  "author": "IceChestnut",
+  "repository": "github:IceChestnut/superspec",
+  "bin": {
+    "superspec-init": "./cli.js"
+  },
+  "files": [
+    "cli.js",
+    "openspec/schemas/superspec/"
+  ],
+  "keywords": [
+    "openspec",
+    "superspec",
+    "superpowers",
+    "spec-driven-development",
+    "sdd",
+    "tdd",
+    "cli"
+  ],
+  "engines": {
+    "node": ">=16"
+  }
+}
