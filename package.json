@@ -1,0 +1,30 @@
+{
+  "name": "superspec-init",
+  "version": "0.1.2",
+  "description": "Compatibility wrapper that forwards to openspec-sp init",
+  "license": "MIT",
+  "author": "IceChestnut",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IceChestnut/superspec.git"
+  },
+  "bin": {
+    "superspec-init": "cli.js"
+  },
+  "files": [
+    "cli.js"
+  ],
+  "keywords": [
+    "openspec",
+    "superspec",
+    "superpowers",
+    "cli",
+    "compatibility"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {
+    "openspec-sp": "^0.1.1"
+  }
+}
