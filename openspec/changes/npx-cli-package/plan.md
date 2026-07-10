@@ -16,8 +16,8 @@
 **对应 tasks.md**: 3.1, 2.2（改进）
 
 - [ ] **Step 1:** 重构 `checkOpenspec()`，改为 `execSync('openspec --version', { stdio: 'pipe' })` 确认二进制存在，失败时打印含 `brew install openspec` 链接的错误并 `process.exit(1)`
-- [ ] **Step 2:** 修改 `--tools` 解析：去掉必填校验和 `process.exit(1)`，改为条件拼接。无 `--tools` 时构造命令 `openspec init --profile custom`，有则追加 `--tools <value>`
-- [ ] **Step 3:** 在临时 git 仓库中测试 `node cli.js`（无 `--tools`），确认 openspec TUI 正常弹出；测试 `node cli.js --tools opencode` 确认直接跳过 TUI
+- [ ] **Step 2:** 修改 `--tools` 解析：去掉必填校验和 `process.exit(1)`，改为条件拼接。无 `--tools` 时构造命令 `openspec init --profile custom` 并进入 openspec TUI，有则追加 `--tools <value>`
+- [ ] **Step 3:** 在临时 git 仓库中测试 `node cli.js`（无参数），确认 openspec TUI 正常弹出；测试 `node cli.js --tools opencode` 确认直接跳过 TUI
 
 ## Task 2: 全局配置状态读取
 

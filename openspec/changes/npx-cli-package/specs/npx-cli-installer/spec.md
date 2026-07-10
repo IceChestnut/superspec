@@ -43,16 +43,19 @@ configuration matches superspec requirements before proceeding with project inst
 ### Requirement: One-command project installation
 
 CLI SHALL install the superspec schema into the current working directory's OpenSpec
-project by executing `openspec init`, copying the bundled schema files, setting the
-default schema, and running verification — all in a single invocation.
+project by executing `openspec init`, copying the bundled schema files, copying the
+bundled project-level skills, setting the default schema, and running verification —
+all in a single invocation.
 
 #### Scenario: Fresh installation with explicit harness
 
-- **WHEN** the user runs the CLI with `--tools cursor` in a git repository that has no
+- **WHEN** the user runs `openspec-sp init --tools cursor` in a git repository that has no
   `openspec/` directory
 - **THEN** CLI SHALL run `openspec init --tools cursor --profile custom`
 - **AND** copy all files from the bundled `openspec/schemas/superspec/` directory into
   `<cwd>/openspec/schemas/superspec/`
+- **AND** copy all files from the bundled `skills/` directory into
+  `<cwd>/.codex/skills/`
 - **AND** write `schema: superspec` to `<cwd>/openspec/config.yaml` (creating the file
   if it does not exist)
 - **AND** run `openspec schemas`, verifying that `superspec (project)` appears in the
@@ -62,7 +65,7 @@ default schema, and running verification — all in a single invocation.
 
 #### Scenario: Fresh installation without --tools flag
 
-- **WHEN** the user runs the CLI without the `--tools` flag in a git repository
+- **WHEN** the user runs `openspec-sp init` without the `--tools` flag in a git repository
 - **THEN** CLI SHALL run `openspec init --profile custom` (no `--tools` argument)
   allowing openspec's interactive TUI to handle harness selection
 - **AND** continue with the remaining installation steps (copy schema, set config, verify)
@@ -95,16 +98,19 @@ default schema, and running verification — all in a single invocation.
 
 ### Requirement: Help and usage display
 
-CLI SHALL display usage information when invoked with `--help`, `-h`, or no arguments.
+CLI SHALL display usage information when invoked with `--help`, `-h`, or without a
+subcommand, and SHALL only start installation when the `init` subcommand is used.
 
 #### Scenario: Help flag
 
 - **WHEN** the user runs the CLI with `--help` or `-h`
 - **THEN** CLI SHALL print the package banner, usage syntax, description of the
-  `--tools` option with available harness values, an example invocation, and a
+  `init` subcommand, the `--tools` option with available harness values, an example
+  invocation, and a
   pointer to next steps (`/opsx:new`, `/opsx:ff`, `/opsx:apply`)
 
-#### Scenario: No arguments
+#### Scenario: No subcommand
 
-- **WHEN** the user runs the CLI with no arguments
-- **THEN** CLI SHALL print the same help output as `--help`
+- **WHEN** the user runs the CLI with no subcommand
+- **THEN** CLI SHALL print the same usage output as `--help`
+- **AND** SHALL NOT invoke `openspec init` or write project files

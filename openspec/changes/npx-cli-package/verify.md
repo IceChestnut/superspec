@@ -26,7 +26,7 @@
 
 | Task | Reason incomplete | Blocks archive? |
 |---|---|---|
-| 4.5 `npm publish` | Manual step — user must publish to npm | No |
+| 4.5 `npm publish` | npm registry rejected `openspec-sp@0.1.1`; package ownership/name availability must be resolved manually | No |
 
 ---
 
@@ -46,7 +46,7 @@ N/A — no `design.md` for this change.
 
 ## 5. Implementation Signal
 
-- [ ] Unstaged files: `.npmignore`, `cli.js`, `openspec/changes/`, `package.json`, `.opencode/`
+- [ ] Unstaged files: `.npmignore`, `README.md`, `cli.js`, `openspec/changes/`, `package.json`, `.opencode/`, `test/`
 - [ ] Not committed yet (direct implementation on main, no worktree)
 
 **Note**: Implementation was done directly on `main` branch without a git worktree. Files are staged in working tree, awaiting commit.
@@ -56,6 +56,6 @@ N/A — no `design.md` for this change.
 ## Overall Decision
 
 - [ ] ✅ PASS
-- [x] ⚠️ PASS WITH WARNINGS — one manual task remains (`npm publish`), files unstaged (direct-on-main implementation)
+- [x] ⚠️ PASS WITH WARNINGS — npm publish remains pending, files remain unstaged, and implementation was done directly on `main`
 
 **Next step**: `/opsx:continue` to finalize the change. Since we're on `main` (integration branch), finalize's canonical git-side closeout will not produce a PR. The escape hatch (`superpowers:finishing-a-development-branch`) should be used, or simply commit the implementation directly.

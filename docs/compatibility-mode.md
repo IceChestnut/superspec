@@ -81,7 +81,7 @@ Use strong-guidance mode when:
 
 The current `superspec` schema remains valuable. It is the strong-guidance mode: a prescriptive workflow that integrates OpenSpec governance with Superpowers execution by default.
 
-Compatibility mode does not replace that schema. It complements it by describing how native OpenSpec workflows and explicit Superspec enhancements can coexist in the same repository and eventually be navigated by helpers such as `superspec-next`.
+Compatibility mode does not replace that schema. It complements it by describing how native OpenSpec workflows and explicit Superspec enhancements can coexist in the same repository and eventually be navigated by helpers such as `superspec-next`. The canonical sources for those project-provided enhancement skills live under the repository's `skills/` directory and are installed into `.codex/skills/` for the target project.
 
 ## Quick Start
 

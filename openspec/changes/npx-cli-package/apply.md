@@ -34,4 +34,4 @@
 ## Next step
 
 Run `/opsx:verify` to validate the implementation against specs.
-Run `npm publish` to release `superspec-init@0.1.0`.
+Run `npm publish --registry https://registry.npmjs.org` to release `openspec-sp`.

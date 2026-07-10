@@ -32,7 +32,7 @@ openspec/
 
 Once you start working on changes, OpenSpec adds `openspec/changes/<change-name>/` directories at the same level as `schemas/`, holding the per-change `proposal.md`, `design.md`, `specs/`, `tasks.md`, `plan.md`, `apply.md`, `verify.md`, and `finalize.md` artifacts. After archival, completed changes move into `openspec/changes/archive/`.
 
-If you adopt compatibility mode, the workflow may also use explicit wrapper skills such as `superspec-brainstorm`, `superspec-plan`, `superspec-apply-change`, `superspec-finalize`, and `superspec-next`. Those wrappers guide how the same change directory artifacts are created or consumed; they do not require a different on-disk OpenSpec layout.
+Compatibility-mode skill sources live in the package's top-level `skills/` directory and are installed into the target project's `.codex/skills/` directory by `superspec-init`. The installed wrappers such as `superspec-brainstorm`, `superspec-plan`, `superspec-apply-change`, `superspec-finalize`, and `superspec-next` guide how the same change directory artifacts are created or consumed; they do not require a different OpenSpec change layout.
 
 ## See also
 

@@ -14,7 +14,7 @@
 
 ## About Superspec
 
-**Superspec is an opinionated integration of OpenSpec and Superpowers**, with OpenSpec as the orchestrator. The artifact pipeline drives the workflow; each phase invokes the right Superpowers skill at the right time so the path from idea to TDD-verified code is traceable, reproducible, and auditable.
+**Superspec is an integration of OpenSpec and Superpowers**, with OpenSpec as the orchestrator. Today the repository ships a strong-guidance `superspec` schema, and it is also evolving a compatibility-oriented integration story for teams that want to keep native OpenSpec semantics while opting into Superpowers discipline explicitly.
 
 **[OpenSpec](https://github.com/Fission-AI/OpenSpec)** turns feature ideas into versioned, reviewable specs — proposals, capability deltas, and tasks that live in the repo alongside the code.
 
@@ -22,7 +22,7 @@
 
 The two overlap (both produce design and task artifacts) but focus on different domains: OpenSpec governs **spec-driven planning**, Superpowers governs **spec-driven development and implementation**. Used independently, you end up with duplicate documents, parallel task lists, and manual decisions about which skill to invoke at each step.
 
-OpenSpec supports custom schemas, and Superspec is exactly that — a drop-in schema that picks the best of both frameworks and wires them together for a fully integrated workflow combining spec-driven and test-driven development. No fork of OpenSpec, no modification to Superpowers skills.
+OpenSpec supports custom schemas, and Superspec's current strong-guidance mode is exactly that — a drop-in schema that picks the best of both frameworks and wires them together for a tightly integrated workflow combining spec-driven and test-driven development. No fork of OpenSpec, no modification to Superpowers skills.
 
 ---
 
@@ -30,7 +30,14 @@ OpenSpec supports custom schemas, and Superspec is exactly that — a drop-in sc
 
 > **Looking for the workflow map?** See **[docs/workflow.md](docs/workflow.md)** for the visual overview, or **[docs/workflow-details.md](docs/workflow-details.md)** for the full ten-step breakdown.
 
-### The six phases of a Superspec change
+Superspec now has two workflow stories:
+
+- **Strong-guidance mode**: the current `superspec` schema, which orchestrates an end-to-end opinionated workflow.
+- **Compatibility mode**: a native OpenSpec-first model with explicit Superspec enhancement actions.
+
+See [docs/compatibility-mode.md](docs/compatibility-mode.md) for the compatibility-oriented model.
+
+### The six phases of a strong-guidance Superspec change
 
 Every change moves through the same six phases, in order:
 
@@ -47,101 +54,19 @@ Each phase produces concrete artifacts in the change directory and (where applic
 
 ## Installation
 
-**Prerequisites**
-- [Homebrew](https://brew.sh/) strongly preferred.
+Install [OpenSpec](https://github.com/Fission-AI/OpenSpec/blob/main/docs/installation.md) and [Superpowers](https://github.com/obra/superpowers#installation) first.
 
-### Install OpenSpec and SuperPowers
-
-#### Install OpenSpec
-```bash
-brew install openspec
-```
-
-If Homebrew is unavailable, [install OpenSpec via a different package manager](https://github.com/Fission-AI/OpenSpec/blob/main/docs/installation.md).
-
-#### Install Superpowers
-Install globally for your agent harness. Follow the [instructions in the Superpowers docs](https://github.com/obra/superpowers#installation).
-
-### Configure OpenSpec
-
-#### OpenSpec Global configuration (one-time only)
-
-Requires [jq](https://github.com/jqlang/jq) to be installed for full automation.
-Copy commands below and run.
+From the root of your git repository, run:
 
 ```bash
-# Backup and remove any existing global OpenSpec configurations.
-OPENSPEC_CONFIG_PATH="$(openspec config path)"
-OPENSPEC_CONFIG_PATH_BACKUP="${OPENSPEC_CONFIG_PATH}.$(date +%s).bkp"
-if [[ -f "${OPENSPEC_CONFIG_PATH}" ]]; then
-  printf "Found existing OpenSpec config: %s\n" "${OPENSPEC_CONFIG_PATH}"
-  printf "Will back up existing config (%s), then delete.\n" "${OPENSPEC_CONFIG_PATH_BACKUP}"
-  cp "${OPENSPEC_CONFIG_PATH}" "${OPENSPEC_CONFIG_PATH_BACKUP}"
-  rm "${OPENSPEC_CONFIG_PATH}"
-fi
-
-# Uncomment to disable telemtry
-# OPENSPEC_TELEMETRY=0
-
-# Create global OpenSpec config with core profile.
-openspec config profile core
-
-# Set correct profile and delivery (commands and skills)
-openspec config set profile custom
-openspec config set delivery both
-
-# Enable all required workflows.
-# Requires jq to be installed, otherwise enable all workflows by running this interactive mode: `openspec config profile`
-if command -v jq >/dev/null 2>&1; then
-  OPENSPEC_CONFIG_PATH="$(openspec config path)"
-  OPENSPEC_TMP_FILE="$(mktemp)"
-  jq '.workflows = ["propose", "explore", "new", "continue", "apply", "ff", "sync", "archive", "bulk-archive", "verify"]' "$OPENSPEC_CONFIG_PATH" > "$OPENSPEC_TMP_FILE" && mv "$OPENSPEC_TMP_FILE" "$OPENSPEC_CONFIG_PATH"
-  printf "\nSuccess\!\n\nOpenSpec is correctly configured for SuperSpec and has the following workflows enabled: \n%s\n\n" "$(openspec config get workflows)"
-else
-  printf "\nWarning: jq was not found on your system.\n\nRun the following command manually:\nopenspec config profile\n\n"
-  printf "During interactive process:\n  Select: Change \"Workflows Only\"\n  Enable all workflows\n\n"
-  printf "Once completed, run this command to confirm all workflows are available:\nopenspec config get workflows\n"
-fi
-
+npx openspec-sp init --tools cursor
+# or just:
+npx openspec-sp init
 ```
 
-#### OpenSpec Repository Setup
+`openspec-sp init` is an enhanced `openspec init`.
 
-Execute steps below from the root of your local git repository.
-
-##### 1. Initialize OpenSpec for your harness
-
-The example below initializes for **Cursor**. For other harnesses (Claude Code, Copilot, Codex, Gemini), run `openspec init --help` to see the supported `--tools` values and follow the guided prompts.
-
-```bash
-openspec init --tools cursor --profile custom
-```
-
-##### 2. Copy the SuperSpec schema into `openspec/schemas`
-
-```bash
-git clone --depth 1 --filter=blob:none --sparse \
-  https://github.com/danielhanold/superspec.git /tmp/superspec-tmp && \
-  cd /tmp/superspec-tmp && \
-  git sparse-checkout set openspec/schemas/superspec && \
-  cd - && \
-  mkdir -p openspec/schemas/superspec && \
-  cp -r /tmp/superspec-tmp/openspec/schemas/superspec/. openspec/schemas/superspec/ && \
-  rm -rf /tmp/superspec-tmp
-```
-
-##### 3. Set SuperSpec as the default schema
-
-```bash
-echo "schema: superspec" > openspec/config.yaml
-```
-
-##### 4. Verify the install
-
-```bash
-openspec schemas      # superspec should appear in the list
-openspec validate     # should pass with no errors
-```
+It keeps the same `--tools` behavior as `openspec init`, and with no `--tools` argument it enters the same interactive TUI for agent selection. In addition, it verifies the required global OpenSpec configuration, installs the bundled `superspec` schema, installs the bundled project skills into `.codex/skills/`, sets the schema as the default for the current project, and runs a quick verification step.
 
 ---
 
@@ -158,7 +83,7 @@ Example: Archiving a change.
 /openspec-archive-change  ==> skill name (do not use this - slash command will use this implicitly)
 ```
 
-Once installed, you have two flows.
+Once installed, you can choose between the current strong-guidance schema path and the compatibility-oriented path.
 
 ### Step-by-step flow (recommended)
 
@@ -190,9 +115,30 @@ For small, well-understood changes where you trust the agent to produce every ar
 /opsx:archive          # Sync the change's delta specs into project specs, then archive
 ```
 
+### Compatibility mode (native OpenSpec + explicit enhancements)
+
+Use this path when you want to preserve native OpenSpec meanings and opt into Superspec discipline only at specific moments.
+
+```text
+openspec-explore            # native open-ended discovery
+superspec-brainstorm        # optional structured discovery
+openspec-propose            # native change proposal path
+openspec-continue-change    # native artifact progression
+superspec-plan              # optional micro-planning before implementation
+openspec-apply-change       # native implementation path
+superspec-apply-change      # optional worktree/TDD/review-backed implementation
+openspec-verify-change      # native verification gate
+superspec-finalize          # optional enhanced git-side closeout
+openspec-archive-change     # native archival and spec sync
+superspec-next              # router when you don't know the right next step
+```
+
+Start here if you want the full explanation: [docs/compatibility-mode.md](docs/compatibility-mode.md).
+For a concrete example flow, see [docs/compatibility-walkthrough.md](docs/compatibility-walkthrough.md).
+
 The `/opsx:` slash commands ship with your harness's OpenSpec integration, not with this schema. If your harness uses different command names, check its OpenSpec docs.
 
-To skip Superspec for a single change and use the upstream schema instead:
+To skip the strong-guidance Superspec schema for a single change and use the upstream schema instead:
 
 ```bash
 /opsx:new my-simple-fix --schema spec-driven
@@ -204,6 +150,8 @@ To skip Superspec for a single change and use the upstream schema instead:
 
 - [`docs/workflow.md`](docs/workflow.md) — visual overview and quick mental model for the six-phase workflow
 - [`docs/workflow-details.md`](docs/workflow-details.md) — full ten-step walkthrough with per-step rationale, owner, and fallback notes
+- [`docs/compatibility-mode.md`](docs/compatibility-mode.md) — native OpenSpec semantics plus explicit Superspec enhancement actions
+- [`docs/compatibility-walkthrough.md`](docs/compatibility-walkthrough.md) — example end-to-end compatibility-mode usage paths
 - [`docs/project-layout.md`](docs/project-layout.md) — files and directories Superspec adds under `openspec/` after install
 - [`openspec/schemas/superspec/README.md`](openspec/schemas/superspec/README.md) — design motivation and rationale
 - [`openspec/schemas/superspec/INTEGRATION.md`](openspec/schemas/superspec/INTEGRATION.md) — full lifecycle, CLI cheat sheet, and design choices

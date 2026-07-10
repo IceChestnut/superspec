@@ -38,12 +38,16 @@ function banner() {
 
 function usage() {
   console.log(`Usage:
-  npx superspec-init --tools <tool>
-  npx superspec-init                 (openspec interactive tool selection)
+  npx openspec-sp init --tools <tool>
+  npx openspec-sp init                 (openspec interactive tool selection)
+  npx openspec-sp --help
 
 Description:
-  One-command setup: initializes OpenSpec, installs the superspec schema,
-  and sets it as the default for the current project.
+  OpenSpec Superpowers companion CLI.
+
+Commands:
+  init             Initialize OpenSpec, install the superspec schema,
+                   install project skills, and set superspec as default.
 
 Options:
   --tools <tool>   AI harness to configure (optional; omit for interactive TUI)
@@ -55,8 +59,8 @@ Available harnesses:
   copilot    GitHub Copilot
 
 Examples:
-  npx superspec-init --tools cursor
-  npx superspec-init
+  npx openspec-sp init --tools cursor
+  npx openspec-sp init
 
 After setup, use /opsx:new, /opsx:ff, /opsx:apply, etc. in your harness.
 `);
@@ -100,7 +104,7 @@ function checkOpenspec() {
     console.error('  brew install openspec');
     console.error('  or see https://github.com/Fission-AI/OpenSpec/blob/main/docs/installation.md');
     console.error('');
-    console.error('Then re-run: npx superspec-init');
+    console.error('Then re-run: npx openspec-sp init');
     return false;
   }
 }
@@ -266,7 +270,7 @@ function runInit(tools) {
   console.log(`Setting up superspec in ${projectName}...\n`);
 
   // ── Step 1: openspec init ─────────────────────
-  console.log('━━━ Step 1/4: Initialize OpenSpec ━━━');
+  console.log('━━━ Step 1/5: Initialize OpenSpec ━━━');
   const toolsArg = tools ? `--tools ${tools}` : '';
   const cmd = `openspec init ${toolsArg} --profile custom`.replace(/\s+/g, ' ').trim();
   try {
@@ -278,7 +282,7 @@ function runInit(tools) {
   }
 
   // ── Step 2: Copy schema ───────────────────────
-  console.log('\n━━━ Step 2/4: Install superspec schema ━━━');
+  console.log('\n━━━ Step 2/5: Install superspec schema ━━━');
 
   const srcDir = path.resolve(__dirname, 'openspec', 'schemas', 'superspec');
   const destDir = path.resolve(cwd, 'openspec', 'schemas', 'superspec');
@@ -293,8 +297,24 @@ function runInit(tools) {
   copyDirSync(srcDir, destDir);
   console.log('  Done.');
 
-  // ── Step 3: Set default schema ────────────────
-  console.log('\n━━━ Step 3/4: Set superspec as default schema ━━━');
+  // ── Step 3: Install project skills ────────────
+  console.log('\n━━━ Step 3/5: Install superspec project skills ━━━');
+
+  const skillsSrcDir = path.resolve(__dirname, 'skills');
+  const skillsDestDir = path.resolve(cwd, '.codex', 'skills');
+
+  if (!fs.existsSync(skillsSrcDir)) {
+    console.error(`Error: bundled skills not found at ${skillsSrcDir}`);
+    console.error('This is a bug in the superspec package — please report it.');
+    process.exit(1);
+  }
+
+  console.log(`  Copying project skills to .codex/skills/`);
+  copyDirSync(skillsSrcDir, skillsDestDir);
+  console.log('  Done.');
+
+  // ── Step 4: Set default schema ────────────────
+  console.log('\n━━━ Step 4/5: Set superspec as default schema ━━━');
 
   const configPath = path.resolve(cwd, 'openspec', 'config.yaml');
   if (fs.existsSync(configPath)) {
@@ -313,8 +333,8 @@ function runInit(tools) {
     console.log('  Wrote openspec/config.yaml');
   }
 
-  // ── Step 4: Verify ────────────────────────────
-  console.log('\n━━━ Step 4/4: Verify installation ━━━');
+  // ── Step 5: Verify ────────────────────────────
+  console.log('\n━━━ Step 5/5: Verify installation ━━━');
 
   let allGood = true;
 
@@ -345,9 +365,10 @@ function runInit(tools) {
   console.log('\nNext steps:');
   console.log('  1. Install Superpowers if you haven\'t:');
   console.log('     https://github.com/obra/superpowers#installation');
-  console.log('  2. Start a new change:');
+  console.log('  2. Use compatibility-mode skills from .codex/skills/ as needed');
+  console.log('  3. Start a new change:');
   console.log('     /opsx:new my-feature');
-  console.log('  3. Or fast-forward through artifacts:');
+  console.log('  4. Or fast-forward through artifacts:');
   console.log('     /opsx:ff my-feature');
   console.log('');
 }
@@ -358,11 +379,19 @@ function runInit(tools) {
 
 (async function main() {
   const args = process.argv.slice(2);
+  const [subcommand, ...rest] = args;
 
   if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
     banner();
     usage();
     process.exit(0);
+  }
+
+  if (subcommand !== 'init') {
+    console.error(`Unknown subcommand: ${subcommand}`);
+    console.error('');
+    usage();
+    process.exit(1);
   }
 
   // ── Pre-flight: openspec binary ─────────────
@@ -374,8 +403,8 @@ function runInit(tools) {
   await preflightGlobalConfig();
 
   // ── Parse --tools (optional) ────────────────
-  const toolsIdx = args.indexOf('--tools');
-  const tools = toolsIdx !== -1 ? args[toolsIdx + 1] : null;
+  const toolsIdx = rest.indexOf('--tools');
+  const tools = toolsIdx !== -1 ? rest[toolsIdx + 1] : null;
 
   // ── Install ─────────────────────────────────
   runInit(tools);

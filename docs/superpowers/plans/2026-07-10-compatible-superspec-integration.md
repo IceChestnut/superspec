@@ -4,7 +4,7 @@
 
 **Goal:** Introduce a compatibility-oriented Superspec integration story that preserves native OpenSpec semantics, documents strong-guidance mode explicitly, and adds explicit Superspec enhancement skill wrappers.
 
-**Architecture:** The work lands in thin documentation-and-skill slices. First establish the compatibility vocabulary in top-level docs, then relabel the existing schema docs as strong-guidance mode, then add wrapper skills that expose explicit enhancement entry points without changing native OpenSpec skill semantics.
+**Architecture:** The work lands in thin documentation-and-skill slices. First establish the compatibility vocabulary in top-level docs, then relabel the existing schema docs as strong-guidance mode, then add wrapper skills under the repository-level `skills/` directory so they expose explicit enhancement entry points without using the harness runtime directory as the source of truth.
 
 **Tech Stack:** Markdown documentation, OpenSpec change artifacts, Codex skill definitions, ripgrep-based verification, OpenSpec CLI validation
 
@@ -12,7 +12,7 @@
 
 - Preserve existing `openspec-*` meanings; do not silently repurpose native OpenSpec terms.
 - Treat the current `superspec` schema as strong-guidance mode in docs rather than removing it.
-- Keep edits scoped to documentation and `.codex/skills/` wrapper definitions for this slice.
+- Keep edits scoped to documentation, repository-level `skills/` wrapper definitions, and the installer behavior needed to distribute them.
 - Avoid touching unrelated user changes elsewhere in the worktree.
 - Verify claims with fresh command output before reporting completion.
 
@@ -103,13 +103,13 @@ git commit -m "docs: reframe superspec schema as strong-guidance mode"
 ### Task 3: Add explicit Superspec enhancement wrapper skills
 
 **Files:**
-- Create: `.codex/skills/superspec-brainstorm/SKILL.md`
-- Create: `.codex/skills/superspec-plan/SKILL.md`
-- Create: `.codex/skills/superspec-apply-change/SKILL.md`
-- Create: `.codex/skills/superspec-finalize/SKILL.md`
+- Create: `skills/superspec-brainstorm/SKILL.md`
+- Create: `skills/superspec-plan/SKILL.md`
+- Create: `skills/superspec-apply-change/SKILL.md`
+- Create: `skills/superspec-finalize/SKILL.md`
 
 **Interfaces:**
-- Consumes: compatibility-mode docs from Task 1, schema framing from Task 2, native OpenSpec skill behavior in `.codex/skills/openspec-*.md`
+- Consumes: compatibility-mode docs from Task 1, schema framing from Task 2, native OpenSpec skill behavior in the harness-provided `openspec-*` skills, plus installer behavior in `cli.js`
 - Produces: explicit enhancement entry points that future routing work (`superspec-next`) can target by name
 
 - [ ] **Step 1: Draft `superspec-brainstorm`**
@@ -134,7 +134,7 @@ Create wrapper skills that:
 
 - [ ] **Step 4: Verify wrapper names and references are discoverable**
 
-Run: `rg -n "superspec-brainstorm|superspec-plan|superspec-apply-change|superspec-finalize" .codex/skills README.md docs openspec`
+Run: `rg -n "superspec-brainstorm|superspec-plan|superspec-apply-change|superspec-finalize" skills README.md docs openspec`
 
 Expected: all four wrappers exist and are referenced consistently from compatibility-facing docs
 
@@ -145,6 +145,6 @@ Run: `openspec validate --all --json`
 Expected: all planning artifacts remain valid after documentation and wrapper-skill changes
 
 ```bash
-git add .codex/skills/superspec-brainstorm/SKILL.md .codex/skills/superspec-plan/SKILL.md .codex/skills/superspec-apply-change/SKILL.md .codex/skills/superspec-finalize/SKILL.md
+git add skills/superspec-brainstorm/SKILL.md skills/superspec-plan/SKILL.md skills/superspec-apply-change/SKILL.md skills/superspec-finalize/SKILL.md
 git commit -m "feat: add explicit superspec enhancement wrappers"
 ```

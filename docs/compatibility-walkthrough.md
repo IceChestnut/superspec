@@ -92,3 +92,5 @@ Use `superspec-next` when:
 ## Relationship to Strong-Guidance Mode
 
 If you already know you want the fully opinionated schema path, use the strong-guidance `superspec` schema directly. Compatibility mode is for teams that want selective enhancement, not for teams that want to recreate the schema one wrapper at a time.
+
+The enhancement wrappers shown in this walkthrough are packaged from the repository's `skills/` directory and installed into the target project's `.codex/skills/` directory by `superspec-init`.
