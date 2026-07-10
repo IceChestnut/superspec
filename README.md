@@ -10,6 +10,10 @@
   MIT licensed · Schema version 4 · Requires OpenSpec + Superpowers
 </p>
 
+<p align="center">
+  <a href="README.md">English</a> · <a href="README.zh-CN.md">简体中文</a>
+</p>
+
 ---
 
 ## About Superspec
@@ -163,10 +167,10 @@ To skip the strong-guidance Superspec schema for a single change and use the ups
 
 ## Credits
 
-Superspec is based on [JiangWay/OpenSpec — `schemas/sdd-plus-superpowers`](https://github.com/JiangWay/OpenSpec/tree/main/schemas/sdd-plus-superpowers), which originated the integration of OpenSpec's spec-driven workflow with Superpowers execution skills. This repository repackages that schema as a standalone, drop-in addition for any OpenSpec project.
+Superspec is based on [JiangWay/OpenSpec — `schemas/sdd-plus-superpowers`](https://github.com/JiangWay/OpenSpec/tree/main/schemas/sdd-plus-superpowers), which originated the integration of OpenSpec's spec-driven workflow with Superpowers execution skills. This repository repackages that schema as a standalone, drop-in addition for any OpenSpec project and continues the work as a fork with additional compatibility tooling.
 
 ---
 
 ## License
 
-[MIT](LICENSE) © 2026 Daniel Hanold.
+[MIT](LICENSE) © 2026 Daniel Hanold and IceChestnut.
