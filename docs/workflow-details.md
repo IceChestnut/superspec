@@ -1,8 +1,8 @@
-# Superspec Workflow Details
+# Superspec Strong-Guidance Workflow Details
 
-A Superspec change moves through **six phases**, broken into **ten concrete steps**. This page walks through each step — what it is, **why it's required**, what concretely happens, which source system (OpenSpec or Superpowers) owns it, and what step from the other source is replaced.
+This page documents the current strong-guidance `superspec` schema. In that mode, a Superspec change moves through **six phases**, broken into **ten concrete steps**. This page walks through each step — what it is, **why it's required**, what concretely happens, which source system (OpenSpec or Superpowers) owns it, and what step from the other source is replaced.
 
-Use it as the long-form companion to the [workflow overview](workflow.md), [top-level README](../README.md), and the schema's own [INTEGRATION.md](../openspec/schemas/superspec/INTEGRATION.md).
+Use it as the long-form companion to the [workflow overview](workflow.md), [top-level README](../README.md), and the schema's own [INTEGRATION.md](../openspec/schemas/superspec/INTEGRATION.md). For the native OpenSpec-first integration story, see [compatibility mode](compatibility-mode.md).
 
 ## At a glance
 

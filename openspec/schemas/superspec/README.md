@@ -1,6 +1,6 @@
-# Superspec Schema
+# Superspec Strong-Guidance Schema
 
-Integrates OpenSpec's artifact governance workflow with Superpowers' execution skills into a single unified workflow.
+This document describes Superspec's current strong-guidance schema: an opinionated OpenSpec workflow that integrates Superpowers execution skills by default. If you want a native OpenSpec-first story with explicit Superspec enhancement actions instead, see [docs/compatibility-mode.md](../../../docs/compatibility-mode.md).
 
 ## What This Schema Solves
 
@@ -26,6 +26,8 @@ A custom schema leverages OpenSpec's **natively supported project-level schema m
 ---
 
 ## Workflow Overview
+
+This section describes the strong-guidance schema flow, not every possible Superspec integration style.
 
 ```text
 brainstorm ──→ proposal ──→ specs ──→ tasks ──→ plan ──→ apply ──→ verify ──→ finalize
@@ -104,6 +106,8 @@ This is achieved through context injection (appending directives when invoking t
 # Or change the project default
 # openspec/config.yaml: schema: spec-driven
 ```
+
+For an integration story that preserves native OpenSpec semantics while adding explicit Superspec enhancement entry points, see [docs/compatibility-mode.md](../../../docs/compatibility-mode.md).
 
 ---
 

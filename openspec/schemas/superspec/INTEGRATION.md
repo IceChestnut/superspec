@@ -1,8 +1,10 @@
-# OpenSpec × Superpowers Integration Guide
+# OpenSpec × Superpowers Strong-Guidance Integration Guide
 
-> This document explains how the `superspec` schema integrates OpenSpec's artifact governance workflow with Superpowers' execution skills into a single workflow. It serves as a reference table for new member onboarding, change reviews, and as required reading before modifying the schema.
+> This document explains how the current `superspec` strong-guidance schema integrates OpenSpec's artifact governance workflow with Superpowers' execution skills into a single workflow. It serves as a reference table for new member onboarding, change reviews, and as required reading before modifying the schema.
 >
 > Corresponding schema version: `superspec` v4
+
+For the compatibility-oriented integration story that preserves native OpenSpec semantics and adds explicit Superspec enhancement actions, see [docs/compatibility-mode.md](../../../docs/compatibility-mode.md).
 
 ---
 
@@ -11,7 +13,7 @@
 OpenSpec handles **"WHAT"** — governance, validation, and archival of markdown artifacts like proposal / specs / design / tasks.
 Superpowers handles **"HOW"** — execution skills such as brainstorming conversations, TDD discipline, subagent dispatch, code review, etc.
 
-The two are integrated through a custom schema [schema.yaml](./schema.yaml). The integration is not at the code level — instead, OpenSpec artifact instructions contain directives like "at this step, use the Skill tool to invoke `superpowers:xxx`." **No superpowers skill files are modified**, nor is the OpenSpec CLI — the integration is purely at the instruction layer.
+In this strong-guidance mode, the two are integrated through a custom schema [schema.yaml](./schema.yaml). The integration is not at the code level — instead, OpenSpec artifact instructions contain directives like "at this step, use the Skill tool to invoke `superpowers:xxx`." **No superpowers skill files are modified**, nor is the OpenSpec CLI — the integration is purely at the instruction layer.
 
 ---
 

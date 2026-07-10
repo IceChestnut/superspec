@@ -1,8 +1,8 @@
-# Superspec Workflow
+# Superspec Strong-Guidance Workflow
 
-A Superspec change moves through six phases. OpenSpec governs the artifacts and lifecycle; Superpowers supplies the execution discipline for brainstorming, planning, TDD, review, and branch cleanup.
+This page describes the current strong-guidance `superspec` schema workflow. In this mode, a Superspec change moves through six phases. OpenSpec governs the artifacts and lifecycle; Superpowers supplies the execution discipline for brainstorming, planning, TDD, review, and branch cleanup.
 
-Use this page as the quick mental model. For the full ten-step rationale, see [workflow details](workflow-details.md).
+Use this page as the quick mental model for the schema-driven path. For the compatibility-oriented model that keeps native OpenSpec semantics intact, see [compatibility mode](compatibility-mode.md). For the full ten-step rationale behind the schema path, see [workflow details](workflow-details.md).
 
 ![Superspec 6-phase pipeline](assets/superspec-phases-flowchart.svg)
 
